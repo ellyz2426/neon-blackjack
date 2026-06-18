@@ -37,7 +37,7 @@ import {
 
 // ===== TYPES =====
 type GameState = 'title' | 'modeSelect' | 'betting' | 'dealing' | 'playerTurn' | 'dealerTurn' | 'resolving' | 'gameover' | 'paused' | 'leaderboard' | 'achievements' | 'stats' | 'skins' | 'settings' | 'help';
-type GameMode = 'classic' | 'speed' | 'highstakes' | 'counting' | 'daily' | 'survival' | 'tournament' | 'practice';
+type GameMode = 'classic' | 'speed' | 'highstakes' | 'counting' | 'daily' | 'survival' | 'tournament' | 'practice' | 'doubleExposure';
 type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
 type Rank = 'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K';
 
@@ -111,7 +111,7 @@ const THEMES = [
 const MODE_NAMES: Record<GameMode, string> = {
 	classic: 'Classic', speed: 'Speed Round', highstakes: 'High Stakes',
 	counting: 'Counting Trainer', daily: 'Daily Challenge', survival: 'Survival',
-	tournament: 'Tournament', practice: 'Practice',
+	tournament: 'Tournament', practice: 'Practice', doubleExposure: 'Double Exposure',
 };
 
 const SKIN_COLORS = [0x0044aa, 0xaa0022, 0x008844, 0x6600aa, 0xaa8800, 0xffffff, 0xff6600, 0x4444cc];
@@ -378,6 +378,7 @@ class BlackjackGame extends createSystem({
 	sidebetsPanel: { required: [PanelUI, PanelDocument], where: [eq(PanelUI, 'config', './ui/sidebets.json')] },
 	strategyPanel: { required: [PanelUI, PanelDocument], where: [eq(PanelUI, 'config', './ui/strategy.json')] },
 	historyPanel: { required: [PanelUI, PanelDocument], where: [eq(PanelUI, 'config', './ui/history.json')] },
+	tutorialPanel: { required: [PanelUI, PanelDocument], where: [eq(PanelUI, 'config', './ui/tutorial.json')] },
 }) {
 	private audio = new AudioManager();
 	private particles!: ParticlePool;
@@ -428,6 +429,7 @@ class BlackjackGame extends createSystem({
 
 	// Panels
 	private panelEntities: Map<string, { entity: any; doc: UIKitDocument }> = new Map();
+	private panelEntityRefs: Map<string, any> = new Map();
 	private toastQueue: string[] = [];
 	private toastTimer = 0;
 	private achvPage = 0;
@@ -452,6 +454,7 @@ class BlackjackGame extends createSystem({
 		skinsSelected: [0] as number[],
 		allInCount: 0, minBetWins: 0,
 		splitAcesCount: 0, maxSplitHands: 0,
+		dblExpHands: 0,
 	};
 	private leaderboard: LeaderboardEntry[] = [];
 	private achievementsUnlocked: Set<string> = new Set();
@@ -465,6 +468,9 @@ class BlackjackGame extends createSystem({
 
 	// XR mode tracking
 	private isInXR = false;
+
+	// Deferred visibility init
+	private panelsInitialized = false;
 
 	// Card dealing animation
 	private animatingCards: { card: Card; mesh: Group; startPos: Vector3; endPos: Vector3; timer: number; duration: number; onDone: () => void }[] = [];
@@ -482,6 +488,25 @@ class BlackjackGame extends createSystem({
 	// Hand history
 	private handHistory: { player: number; dealer: number; result: string; bet: number; payout: number; mode: string }[] = [];
 
+	// Session timer
+	private sessionStartTime = performance.now();
+	private sessionHandsPlayed = 0;
+	private sessionWins = 0;
+	private sessionEarnings = 0;
+
+	// Dealer 3D figure
+	private dealerGroup!: Group;
+	private dealerArmL!: Group;
+	private dealerArmR!: Group;
+	private dealerDealAnim = 0;
+
+	// Neon signs
+	private neonSigns: { group: Group; phase: number; speed: number }[] = [];
+
+	// Streak escalation
+	private streakGlowIntensity = 0;
+	private streakFloor: Mesh | null = null;
+
 	get theme() { return THEMES[this.themeIdx]; }
 	get activeHand(): Hand | undefined { return this.playerHands[this.activeHandIdx]; }
 
@@ -498,8 +523,12 @@ class BlackjackGame extends createSystem({
 		this.chipGroup = new Group();
 		this.world.scene.add(this.chipGroup);
 		this.createHandIndicator();
+		this.createDealerFigure();
+		this.createNeonSigns();
+		this.createStreakFloor();
 		this.createPanels();
 		this.setupInput();
+		this.sessionStartTime = performance.now();
 		this.setState('title');
 	}
 
@@ -672,6 +701,211 @@ class BlackjackGame extends createSystem({
 		// Pulse
 		const pulse = 0.4 + 0.3 * Math.sin(performance.now() / 300);
 		(this.handIndicator.material as MeshBasicMaterial).opacity = pulse;
+	}
+
+	// ===== 3D DEALER FIGURE =====
+	private createDealerFigure() {
+		this.dealerGroup = new Group();
+		const accent = this.theme.accent;
+
+		// Body (torso)
+		const bodyGeo = new CylinderGeometry(0.08, 0.06, 0.2, 8);
+		const bodyMat = new MeshStandardMaterial({ color: 0x111122, roughness: 0.5, metalness: 0.3 });
+		const body = new Mesh(bodyGeo, bodyMat);
+		body.position.set(0, TABLE_Y + 0.1, DEALER_Z - 0.35);
+		this.dealerGroup.add(body);
+
+		// Head
+		const headGeo = new SphereGeometry(0.06, 12, 12);
+		const headMat = new MeshStandardMaterial({ color: 0x222244, roughness: 0.4, metalness: 0.2 });
+		const head = new Mesh(headGeo, headMat);
+		head.position.set(0, TABLE_Y + 0.27, DEALER_Z - 0.35);
+		this.dealerGroup.add(head);
+
+		// Eyes (glowing)
+		const eyeGeo = new SphereGeometry(0.012, 8, 8);
+		const eyeMat = new MeshBasicMaterial({ color: accent });
+		const leftEye = new Mesh(eyeGeo, eyeMat);
+		leftEye.position.set(-0.022, TABLE_Y + 0.28, DEALER_Z - 0.295);
+		this.dealerGroup.add(leftEye);
+		const rightEye = new Mesh(eyeGeo, eyeMat);
+		rightEye.position.set(0.022, TABLE_Y + 0.28, DEALER_Z - 0.295);
+		this.dealerGroup.add(rightEye);
+
+		// Dealer visor/hat brim
+		const visorGeo = new CylinderGeometry(0.07, 0.07, 0.008, 12);
+		const visorMat = new MeshStandardMaterial({ color: 0x333355, roughness: 0.3 });
+		const visor = new Mesh(visorGeo, visorMat);
+		visor.position.set(0, TABLE_Y + 0.32, DEALER_Z - 0.35);
+		this.dealerGroup.add(visor);
+
+		// Collar glow ring
+		const collarGeo = new TorusGeometry(0.055, 0.005, 6, 16);
+		const collarMat = new MeshBasicMaterial({ color: accent, transparent: true, opacity: 0.5 });
+		const collar = new Mesh(collarGeo, collarMat);
+		collar.rotation.x = Math.PI / 2;
+		collar.position.set(0, TABLE_Y + 0.2, DEALER_Z - 0.35);
+		this.dealerGroup.add(collar);
+
+		// Arms
+		this.dealerArmL = new Group();
+		const armGeo = new CylinderGeometry(0.02, 0.015, 0.15, 6);
+		const armMat = new MeshStandardMaterial({ color: 0x111122, roughness: 0.5 });
+		const armL = new Mesh(armGeo, armMat);
+		armL.position.set(-0.12, TABLE_Y + 0.06, DEALER_Z - 0.35);
+		armL.rotation.z = 0.3;
+		this.dealerArmL.add(armL);
+		this.dealerGroup.add(this.dealerArmL);
+
+		this.dealerArmR = new Group();
+		const armR = new Mesh(armGeo, armMat.clone());
+		armR.position.set(0.12, TABLE_Y + 0.06, DEALER_Z - 0.35);
+		armR.rotation.z = -0.3;
+		this.dealerArmR.add(armR);
+		this.dealerGroup.add(this.dealerArmR);
+
+		this.world.scene.add(this.dealerGroup);
+	}
+
+	private updateDealerAnimation(dt: number) {
+		if (this.dealerDealAnim > 0) {
+			this.dealerDealAnim -= dt;
+			const t = Math.sin(this.dealerDealAnim * 8);
+			this.dealerArmR.rotation.x = t * 0.3;
+			this.dealerArmL.rotation.x = -t * 0.15;
+		} else {
+			// Subtle idle breathing
+			const t = performance.now() / 2000;
+			this.dealerArmR.rotation.x = Math.sin(t) * 0.02;
+			this.dealerArmL.rotation.x = Math.sin(t + 1) * 0.02;
+		}
+	}
+
+	// ===== NEON SIGNS =====
+	private createNeonSigns() {
+		const scene = this.world.scene;
+		const accent = this.theme.accent;
+
+		// "BLACKJACK" sign letters above table
+		const letters = ['B', 'L', 'A', 'C', 'K', 'J', 'A', 'C', 'K'];
+		const startX = -0.56;
+		const spacing = 0.14;
+
+		for (let i = 0; i < letters.length; i++) {
+			const group = new Group();
+			// Letter backing
+			const backGeo = new BoxGeometry(0.1, 0.14, 0.01);
+			const backMat = new MeshBasicMaterial({
+				color: accent,
+				transparent: true,
+				opacity: 0.6 + Math.random() * 0.3,
+				blending: AdditiveBlending,
+			});
+			const back = new Mesh(backGeo, backMat);
+			group.add(back);
+
+			// Outline glow
+			const outGeo = new BoxGeometry(0.11, 0.15, 0.005);
+			const outMat = new MeshBasicMaterial({
+				color: accent,
+				transparent: true,
+				opacity: 0.15,
+				blending: AdditiveBlending,
+			});
+			const outline = new Mesh(outGeo, outMat);
+			outline.position.z = -0.005;
+			group.add(outline);
+
+			group.position.set(startX + i * spacing, 2.8, -3.5);
+			scene.add(group);
+			this.neonSigns.push({
+				group,
+				phase: i * 0.4 + Math.random() * 0.5,
+				speed: 1.5 + Math.random() * 0.5,
+			});
+		}
+
+		// Side decorative neon bars
+		for (let side = -1; side <= 1; side += 2) {
+			for (let h = 0; h < 3; h++) {
+				const barGeo = new BoxGeometry(0.02, 0.6, 0.01);
+				const barMat = new MeshBasicMaterial({
+					color: accent,
+					transparent: true,
+					opacity: 0.25,
+					blending: AdditiveBlending,
+				});
+				const bar = new Mesh(barGeo, barMat);
+				bar.position.set(side * 3.2, 1.0 + h * 0.7, -2);
+				scene.add(bar);
+				this.neonSigns.push({
+					group: bar as any,
+					phase: h * 1.0 + (side > 0 ? 2 : 0),
+					speed: 0.8 + Math.random() * 0.3,
+				});
+			}
+		}
+	}
+
+	private updateNeonSigns(time: number) {
+		for (const sign of this.neonSigns) {
+			const flicker = 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(time * sign.speed + sign.phase));
+			const children = sign.group.children || [];
+			if (children.length > 0) {
+				(children[0] as Mesh).material && ((children[0] as Mesh).material as MeshBasicMaterial).opacity !== undefined &&
+					((children[0] as Mesh).material as MeshBasicMaterial).opacity !== 0 &&
+					(((children[0] as Mesh).material as MeshBasicMaterial).opacity = flicker * 0.7);
+			} else {
+				// Single mesh (side bars)
+				((sign.group as any).material as MeshBasicMaterial).opacity = flicker * 0.3;
+			}
+		}
+	}
+
+	// ===== STREAK FLOOR =====
+	private createStreakFloor() {
+		const geo = new RingGeometry(0.8, 1.2, 32);
+		const mat = new MeshBasicMaterial({
+			color: 0x00ff88,
+			transparent: true,
+			opacity: 0,
+			side: DoubleSide,
+			blending: AdditiveBlending,
+		});
+		this.streakFloor = new Mesh(geo, mat);
+		this.streakFloor.rotation.x = -Math.PI / 2;
+		this.streakFloor.position.set(0, 0.01, TABLE_Z);
+		this.world.scene.add(this.streakFloor);
+	}
+
+	private updateStreakEffects(dt: number, time: number) {
+		// Ramp glow based on win streak
+		const targetIntensity = Math.min(1, this.winStreak * 0.15);
+		this.streakGlowIntensity += (targetIntensity - this.streakGlowIntensity) * dt * 3;
+
+		if (this.streakFloor) {
+			const mat = this.streakFloor.material as MeshBasicMaterial;
+			mat.opacity = this.streakGlowIntensity * (0.15 + 0.05 * Math.sin(time * 2));
+			// Color shifts through streak levels
+			if (this.winStreak >= 10) mat.color.set(0xff00ff); // Purple fire
+			else if (this.winStreak >= 7) mat.color.set(0xffaa00); // Gold
+			else if (this.winStreak >= 5) mat.color.set(0xff4400); // Orange
+			else if (this.winStreak >= 3) mat.color.set(0x00ff88); // Green
+			else mat.color.set(0x00e5ff); // Cyan default
+
+			this.streakFloor.scale.setScalar(1 + this.streakGlowIntensity * 0.2);
+		}
+
+		// Spawn ambient streak particles for high streaks
+		if (this.winStreak >= 5 && Math.random() < 0.02 * this.winStreak) {
+			const angle = Math.random() * Math.PI * 2;
+			const r = 0.5 + Math.random() * 0.5;
+			const color = this.winStreak >= 10 ? 0xff00ff : this.winStreak >= 7 ? 0xffaa00 : 0x00ff88;
+			this.particles.burst(
+				Math.cos(angle) * r, TABLE_Y - 0.3, TABLE_Z + Math.sin(angle) * r,
+				color, 2
+			);
+		}
 	}
 
 	// ===== XR CONTROLLER INPUT =====
@@ -881,6 +1115,7 @@ class BlackjackGame extends createSystem({
 			'title', 'modeselect', 'betting', 'actions', 'hud', 'gameover',
 			'pause', 'leaderboard', 'achievements', 'stats', 'skins', 'settings',
 			'help', 'toast', 'counting', 'dealerinfo', 'sidebets', 'strategy', 'history',
+			'tutorial',
 		];
 
 		for (const name of configs) {
@@ -888,6 +1123,9 @@ class BlackjackGame extends createSystem({
 			const panelConfig: any = { config: `./ui/${name}.json` };
 
 			entity.addComponent(PanelUI, panelConfig);
+
+			// Store entity ref for initial visibility control
+			this.panelEntityRefs.set(name, entity);
 
 			// HUD, toast, and strategy follow the player
 			if (name === 'hud' || name === 'toast') {
@@ -911,6 +1149,10 @@ class BlackjackGame extends createSystem({
 			else {
 				entity.addComponent(ScreenSpace);
 			}
+
+			// Initially hide all panels - visibility will be managed by setState
+			const obj = entity.object3D;
+			if (obj) obj.visible = false;
 		}
 
 		// Wire up qualify events
@@ -918,14 +1160,14 @@ class BlackjackGame extends createSystem({
 			'titlePanel', 'modePanel', 'bettingPanel', 'actionsPanel', 'hudPanel',
 			'gameoverPanel', 'pausePanel', 'lbPanel', 'achvPanel', 'statsPanel',
 			'skinsPanel', 'settingsPanel', 'helpPanel', 'toastPanel', 'countingPanel', 'dealerInfoPanel',
-			'sidebetsPanel', 'strategyPanel', 'historyPanel',
+			'sidebetsPanel', 'strategyPanel', 'historyPanel', 'tutorialPanel',
 		] as const;
 
 		const panelNames = [
 			'title', 'modeselect', 'betting', 'actions', 'hud',
 			'gameover', 'pause', 'leaderboard', 'achievements', 'stats',
 			'skins', 'settings', 'help', 'toast', 'counting', 'dealerinfo',
-			'sidebets', 'strategy', 'history',
+			'sidebets', 'strategy', 'history', 'tutorial',
 		];
 
 		for (let i = 0; i < queryNames.length; i++) {
@@ -968,6 +1210,7 @@ class BlackjackGame extends createSystem({
 				btn('btn-survival', () => this.startMode('survival'));
 				btn('btn-tournament', () => this.startMode('tournament'));
 				btn('btn-practice', () => this.startMode('practice'));
+				btn('btn-dblexp', () => this.startMode('doubleExposure'));
 				btn('btn-back', () => this.setState('title'));
 				break;
 
@@ -1044,6 +1287,10 @@ class BlackjackGame extends createSystem({
 				btn('btn-help-back', () => this.setState('title'));
 				break;
 
+			case 'tutorial':
+				btn('btn-tutorial-back', () => this.setState('title'));
+				break;
+
 			case 'sidebets':
 				btn('btn-pp-10', () => this.addSideBet('pp', 10));
 				btn('btn-pp-25', () => this.addSideBet('pp', 25));
@@ -1068,10 +1315,26 @@ class BlackjackGame extends createSystem({
 	}
 
 	private setPanelVisible(name: string, visible: boolean) {
+		// Set UIKit root element display
 		const p = this.panelEntities.get(name);
-		if (!p) return;
-		const obj = p.entity.object3D;
-		if (obj) obj.visible = visible;
+		if (p) {
+			const obj = p.entity.object3D;
+			if (obj) obj.visible = visible;
+			// Also set display on root UIKit element for ScreenSpace panels
+			try {
+				const root = (p.doc as any).firstElementChild || (p.doc as any).children?.[0];
+				if (root && typeof root.setProperties === 'function') {
+					root.setProperties({ display: visible ? 'flex' : 'none' });
+				}
+			} catch { /* ignore */ }
+			return;
+		}
+		// Fallback to entity ref for panels not yet qualified
+		const ref = this.panelEntityRefs.get(name);
+		if (ref) {
+			const obj = ref.object3D;
+			if (obj) obj.visible = visible;
+		}
 	}
 
 	// ===== STATE MANAGEMENT =====
@@ -1092,6 +1355,7 @@ class BlackjackGame extends createSystem({
 			'title', 'modeselect', 'betting', 'actions', 'hud', 'gameover',
 			'pause', 'leaderboard', 'achievements', 'stats', 'skins', 'settings',
 			'help', 'toast', 'counting', 'dealerinfo', 'sidebets', 'strategy', 'history',
+			'tutorial',
 		];
 		const visible: Record<GameState, string[]> = {
 			title: ['title'],
@@ -1108,7 +1372,7 @@ class BlackjackGame extends createSystem({
 			stats: ['stats'],
 			skins: ['skins'],
 			settings: ['settings'],
-			help: ['help'],
+			help: ['tutorial'],
 		};
 
 		const show = new Set(visible[this.state] || []);
@@ -1135,6 +1399,10 @@ class BlackjackGame extends createSystem({
 					else if (e.key === 'd' || e.key === 'D') this.playerDouble();
 					else if (e.key === 'p' || e.key === 'P') this.playerSplit();
 				}
+				if (this.state === 'gameover') {
+					if (e.key === 'n' || e.key === 'N') this.rebet();
+					if (e.key === 'm' || e.key === 'M') { this.clearCards(); this.setState('title'); }
+				}
 				if (e.key === 'Escape') {
 					if (this.state === 'paused') this.setState(this.prevState);
 					else if (['playerTurn', 'betting', 'dealing', 'dealerTurn'].includes(this.state)) this.setState('paused');
@@ -1147,9 +1415,23 @@ class BlackjackGame extends createSystem({
 	update(delta: number) {
 		const dt = Math.min(delta, 0.05);
 
+		// Deferred panel visibility initialization
+		if (!this.panelsInitialized && this.panelEntityRefs.size > 0) {
+			// Check if at least some panels have object3D ready
+			let ready = 0;
+			for (const [, ref] of this.panelEntityRefs) {
+				if (ref.object3D) ready++;
+			}
+			if (ready >= this.panelEntityRefs.size) {
+				this.panelsInitialized = true;
+				this.updatePanelVisibility();
+			}
+		}
+
 		this.particles.update(dt);
 		this.handleXRInput();
 		this.updateHandIndicator();
+		this.updateDealerAnimation(dt);
 
 		const time = performance.now() / 1000;
 		for (const d of this.decorations) {
@@ -1167,6 +1449,9 @@ class BlackjackGame extends createSystem({
 			}
 			(ap.mesh.material as MeshBasicMaterial).opacity = ap.baseOpacity * (0.6 + 0.4 * Math.sin(time + ap.phase));
 		}
+
+		this.updateNeonSigns(time);
+		this.updateStreakEffects(dt, time);
 
 		for (let i = this.animatingCards.length - 1; i >= 0; i--) {
 			const anim = this.animatingCards[i];
@@ -1247,6 +1532,9 @@ class BlackjackGame extends createSystem({
 			this.bank = 10000;
 		} else if (mode === 'practice') {
 			this.bank = 999999;
+		} else if (mode === 'doubleExposure') {
+			// Double Exposure: both dealer cards face up, BJ pays even money
+			this.bank = loadData('bank', 10000);
 		} else if (mode === 'daily') {
 			const seed = getDailySeed();
 			if (this.career.lastDaily === String(seed)) {
@@ -1259,6 +1547,10 @@ class BlackjackGame extends createSystem({
 		this.shoe = new Shoe(this.numDecks);
 		this.winStreak = 0;
 		this.handsPlayed = 0;
+		this.sessionHandsPlayed = 0;
+		this.sessionWins = 0;
+		this.sessionEarnings = 0;
+		this.sessionStartTime = performance.now();
 		this.setState('betting');
 	}
 
@@ -1291,13 +1583,17 @@ class BlackjackGame extends createSystem({
 		this.dealerCards = [];
 		this.insuranceBet = 0;
 
+		// In Double Exposure mode, both dealer cards are face up
+		const dealerSecondFaceUp = this.mode === 'doubleExposure';
+
 		this.dealQueue = [
 			{ target: 'player', handIdx: 0, faceUp: true },
 			{ target: 'dealer', handIdx: 0, faceUp: true },
 			{ target: 'player', handIdx: 0, faceUp: true },
-			{ target: 'dealer', handIdx: 0, faceUp: false },
+			{ target: 'dealer', handIdx: 0, faceUp: dealerSecondFaceUp },
 		];
 		this.dealTimer = 0.1;
+		this.dealerDealAnim = 1.5; // Trigger dealer arm animation
 		this.setState('dealing');
 		this.audio.playDeal();
 	}
@@ -1348,8 +1644,15 @@ class BlackjackGame extends createSystem({
 	private onDealComplete() {
 		const dealerUpCard = this.dealerCards[0];
 
-		this.setText('dealerinfo', 'dealer-value', `${RANK_VALUES[dealerUpCard.rank]}`);
-		this.setText('dealerinfo', 'dealer-status', 'Showing');
+		// In Double Exposure, show full dealer value
+		if (this.mode === 'doubleExposure') {
+			const fullVal = handValue(this.dealerCards);
+			this.setText('dealerinfo', 'dealer-value', `${fullVal}`);
+			this.setText('dealerinfo', 'dealer-status', 'Both cards shown');
+		} else {
+			this.setText('dealerinfo', 'dealer-value', `${RANK_VALUES[dealerUpCard.rank]}`);
+			this.setText('dealerinfo', 'dealer-status', 'Showing');
+		}
 
 		// Resolve side bets immediately after deal
 		this.resolveSideBets();
@@ -1362,7 +1665,12 @@ class BlackjackGame extends createSystem({
 			} else {
 				this.audio.playBlackjack();
 				this.particles.burst(0, PLAYER_Y + 0.1, PLAYER_Z, 0xffaa00, 20);
-				this.resolveHand('blackjack', 0);
+				// Double Exposure: blackjack pays even money (1:1) instead of 3:2
+				if (this.mode === 'doubleExposure') {
+					this.resolveHand('win', 0); // Even money
+				} else {
+					this.resolveHand('blackjack', 0);
+				}
 			}
 			return;
 		}
@@ -1668,6 +1976,16 @@ class BlackjackGame extends createSystem({
 		}
 
 		this.career.xp += result === 'blackjack' ? 50 : result === 'win' ? 25 : result === 'push' ? 10 : 5;
+
+		// Session tracking
+		this.sessionHandsPlayed++;
+		if (result === 'win' || result === 'blackjack') {
+			this.sessionWins++;
+			this.sessionEarnings += payout - hand.bet;
+		} else if (result === 'lose') {
+			this.sessionEarnings -= hand.bet;
+		}
+
 		const newLevel = Math.floor(this.career.xp / XP_PER_LEVEL) + 1;
 		if (newLevel > this.career.level) {
 			this.career.level = newLevel;
@@ -1680,6 +1998,7 @@ class BlackjackGame extends createSystem({
 		if (this.mode === 'counting') this.career.countingHands++;
 		if (this.mode === 'practice') this.career.practiceHands++;
 		if (this.mode === 'highstakes' && (result === 'win' || result === 'blackjack')) this.career.highstakesWins++;
+		if (this.mode === 'doubleExposure') this.career.dblExpHands++;
 
 		// Bust tracking
 		if (hand.busted) {
@@ -1787,6 +2106,14 @@ class BlackjackGame extends createSystem({
 
 		if (result === 'win' || result === 'blackjack') {
 			this.particles.burst(0, PLAYER_Y + 0.15, PLAYER_Z, this.theme.accent, 25);
+			// Streak escalation: more particles for higher streaks
+			if (this.winStreak >= 5) {
+				this.particles.burst(-0.3, PLAYER_Y + 0.2, PLAYER_Z, 0xffaa00, 15);
+				this.particles.burst(0.3, PLAYER_Y + 0.2, PLAYER_Z, 0xffaa00, 15);
+			}
+			if (this.winStreak >= 10) {
+				this.particles.burst(0, PLAYER_Y + 0.3, PLAYER_Z, 0xff00ff, 20);
+			}
 		}
 	}
 
@@ -1855,6 +2182,19 @@ class BlackjackGame extends createSystem({
 		this.setText('hud', 'hud-player', playerVal > 0 ? `${playerVal}` : '--');
 		this.setText('hud', 'hud-dealer', dealerVal > 0 ? `${dealerVal}` : '--');
 		this.setText('hud', 'hud-mode', MODE_NAMES[this.mode]);
+
+		// Session timer
+		const elapsed = Math.floor((performance.now() - this.sessionStartTime) / 1000);
+		const mins = Math.floor(elapsed / 60);
+		const secs = elapsed % 60;
+		this.setText('hud', 'hud-session', `${mins}:${secs.toString().padStart(2, '0')} | W:${this.sessionWins}`);
+
+		// Win streak display
+		if (this.winStreak >= 3) {
+			this.setText('hud', 'hud-streak', `Streak: ${this.winStreak}x`);
+		} else {
+			this.setText('hud', 'hud-streak', '');
+		}
 	}
 
 	private refreshCounting() {
@@ -2285,6 +2625,11 @@ class BlackjackGame extends createSystem({
 			{ id: 'max_bet', name: 'All In', desc: 'Bet your entire bank', check: () => c.allInCount >= 1 },
 			{ id: 'min_bet', name: 'Penny Pincher', desc: 'Win with minimum bet', check: () => c.minBetWins >= 1 },
 			{ id: 'vr_player', name: 'Virtual Reality', desc: 'Play in VR mode', check: () => c.playedVR },
+			{ id: 'dblexp_10', name: 'Transparent Dealer', desc: 'Play 10 Double Exposure hands', check: () => c.dblExpHands >= 10 },
+			{ id: 'session_50', name: 'Session Grinder', desc: 'Play 50 hands in one session', check: () => this.sessionHandsPlayed >= 50 },
+			{ id: 'session_100', name: 'Iron Player', desc: 'Play 100 hands in one session', check: () => this.sessionHandsPlayed >= 100 },
+			{ id: 'session_profit', name: 'Profitable Session', desc: 'End a session with 5000+ profit', check: () => this.sessionEarnings >= 5000 },
+			{ id: 'streak_25', name: 'Invincible', desc: 'Win 25 in a row', check: () => c.bestStreak >= 25 },
 		];
 	}
 

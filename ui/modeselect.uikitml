@@ -9,6 +9,7 @@
     <text name="btn-survival" fontSize="12" color="#ff6600" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#ff6600" borderWidth="1" cursor="pointer">Survival</text>
     <text name="btn-tournament" fontSize="12" color="#8888ff" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#8888ff" borderWidth="1" cursor="pointer">Tournament</text>
     <text name="btn-practice" fontSize="12" color="#aaaaaa" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#aaaaaa" borderWidth="1" cursor="pointer">Practice</text>
+    <text name="btn-dblexp" fontSize="12" color="#44ffcc" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#44ffcc" borderWidth="1" cursor="pointer">Double Exposure</text>
   </container>
   <text name="btn-back" fontSize="12" color="#666666" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#666666" borderWidth="1" cursor="pointer" marginTop="4">BACK</text>
 </container>

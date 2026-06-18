@@ -19,4 +19,11 @@
     <text fontSize="8" color="#666666">MODE</text>
     <text name="hud-mode" fontSize="11" fontWeight="bold" color="#ff00ff">Classic</text>
   </container>
+  <container flexDirection="column" alignItems="center">
+    <text fontSize="8" color="#666666">SESSION</text>
+    <text name="hud-session" fontSize="9" color="#888888">0:00 | W:0</text>
+  </container>
+  <container flexDirection="column" alignItems="center">
+    <text name="hud-streak" fontSize="10" fontWeight="bold" color="#ffaa00"></text>
+  </container>
 </container>

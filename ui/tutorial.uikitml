@@ -1,0 +1,47 @@
+<container flexDirection="column" alignItems="center" gap="4" padding="10" backgroundColor="#000a18" borderRadius="8" borderColor="#00e5ff" borderWidth="1">
+  <text fontSize="18" fontWeight="bold" color="#00e5ff">HOW TO PLAY</text>
+  <container flexDirection="column" gap="3" padding="6" backgroundColor="#001122" borderRadius="4">
+    <text fontSize="11" fontWeight="bold" color="#ffaa00">OBJECTIVE</text>
+    <text fontSize="9" color="#cccccc">Beat the dealer by getting closer to 21</text>
+    <text fontSize="9" color="#cccccc">without going over (busting).</text>
+    <text fontSize="9" color="#cccccc">Blackjack (Ace + 10-value) pays 3:2.</text>
+  </container>
+  <container flexDirection="column" gap="3" padding="6" backgroundColor="#001122" borderRadius="4">
+    <text fontSize="11" fontWeight="bold" color="#ffaa00">CARD VALUES</text>
+    <text fontSize="9" color="#cccccc">2-9: Face value | 10,J,Q,K: 10</text>
+    <text fontSize="9" color="#cccccc">Ace: 11 or 1 (auto-adjusted)</text>
+  </container>
+  <container flexDirection="column" gap="3" padding="6" backgroundColor="#001122" borderRadius="4">
+    <text fontSize="11" fontWeight="bold" color="#ffaa00">ACTIONS</text>
+    <text fontSize="9" color="#00ff88">HIT: Draw another card</text>
+    <text fontSize="9" color="#ffaa00">STAND: Keep current hand</text>
+    <text fontSize="9" color="#ff00ff">DOUBLE: Double bet, get one card</text>
+    <text fontSize="9" color="#8888ff">SPLIT: Split matching pair</text>
+    <text fontSize="9" color="#ffcc00">INSURANCE: Half-bet if dealer shows Ace</text>
+    <text fontSize="9" color="#ff6666">SURRENDER: Forfeit half your bet</text>
+  </container>
+  <container flexDirection="column" gap="3" padding="6" backgroundColor="#001122" borderRadius="4">
+    <text fontSize="11" fontWeight="bold" color="#ffaa00">KEYBOARD</text>
+    <text fontSize="9" color="#cccccc">H=Hit S=Stand D=Double P=Split ESC=Pause</text>
+    <text fontSize="9" color="#cccccc">N=New hand (after result) M=Menu</text>
+  </container>
+  <container flexDirection="column" gap="3" padding="6" backgroundColor="#001122" borderRadius="4">
+    <text fontSize="11" fontWeight="bold" color="#ffaa00">VR CONTROLS</text>
+    <text fontSize="9" color="#cccccc">Right Trigger: Hit | Left Trigger: Stand</text>
+    <text fontSize="9" color="#cccccc">A Button: Double | B Button: Split</text>
+    <text fontSize="9" color="#cccccc">Thumbstick: Adjust bet / Deal</text>
+  </container>
+  <container flexDirection="column" gap="3" padding="6" backgroundColor="#001122" borderRadius="4">
+    <text fontSize="11" fontWeight="bold" color="#ffaa00">GAME MODES</text>
+    <text fontSize="9" color="#00e5ff">Classic: Standard blackjack</text>
+    <text fontSize="9" color="#ff4444">Speed: Timed decisions</text>
+    <text fontSize="9" color="#ff00ff">High Stakes: Minimum bet 500</text>
+    <text fontSize="9" color="#00ff88">Counting: Learn card counting</text>
+    <text fontSize="9" color="#ffaa00">Daily: One attempt per day</text>
+    <text fontSize="9" color="#ff6666">Survival: 3 lives, don't lose</text>
+    <text fontSize="9" color="#8888ff">Tournament: 10 rounds, score points</text>
+    <text fontSize="9" color="#888888">Practice: Infinite bank</text>
+    <text fontSize="9" color="#44ffcc">Double Exposure: See both dealer cards</text>
+  </container>
+  <text name="btn-tutorial-back" fontSize="12" color="#ff4444" backgroundColor="#1a0505" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#ff4444" borderWidth="1" cursor="pointer" marginTop="4">BACK</text>
+</container>

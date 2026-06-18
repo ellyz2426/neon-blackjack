@@ -187,6 +187,65 @@
           "alignitems": "center"
         },
         "dataUid": "uid-14"
+      },
+      {
+        "sourceTag": "container",
+        "type": "custom",
+        "children": [
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "SESSION"
+            ],
+            "properties": {
+              "fontsize": "8",
+              "color": "#666666"
+            },
+            "dataUid": "uid-18"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "0:00 | W:0"
+            ],
+            "properties": {
+              "name": "hud-session",
+              "fontsize": "9",
+              "color": "#888888"
+            },
+            "dataUid": "uid-19"
+          }
+        ],
+        "properties": {
+          "flexdirection": "column",
+          "alignitems": "center"
+        },
+        "dataUid": "uid-17"
+      },
+      {
+        "sourceTag": "container",
+        "type": "custom",
+        "children": [
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [],
+            "properties": {
+              "name": "hud-streak",
+              "fontsize": "10",
+              "fontweight": "bold",
+              "color": "#ffaa00"
+            },
+            "dataUid": "uid-21"
+          }
+        ],
+        "properties": {
+          "flexdirection": "column",
+          "alignitems": "center"
+        },
+        "dataUid": "uid-20"
       }
     ],
     "properties": {
@@ -210,7 +269,7 @@
         "column": 0
       },
       "end": {
-        "line": 21,
+        "line": 28,
         "column": 12
       }
     },
@@ -362,6 +421,56 @@
       "end": {
         "line": 19,
         "column": 88
+      }
+    },
+    "uid-17": {
+      "start": {
+        "line": 21,
+        "column": 2
+      },
+      "end": {
+        "line": 24,
+        "column": 14
+      }
+    },
+    "uid-18": {
+      "start": {
+        "line": 22,
+        "column": 4
+      },
+      "end": {
+        "line": 22,
+        "column": 53
+      }
+    },
+    "uid-19": {
+      "start": {
+        "line": 23,
+        "column": 4
+      },
+      "end": {
+        "line": 23,
+        "column": 75
+      }
+    },
+    "uid-20": {
+      "start": {
+        "line": 25,
+        "column": 2
+      },
+      "end": {
+        "line": 27,
+        "column": 14
+      }
+    },
+    "uid-21": {
+      "start": {
+        "line": 26,
+        "column": 4
+      },
+      "end": {
+        "line": 26,
+        "column": 83
       }
     }
   }

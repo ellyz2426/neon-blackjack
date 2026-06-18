@@ -1,0 +1,6 @@
+<container flexDirection="column" alignItems="center" gap="4" padding="8" backgroundColor="#000a18cc" borderRadius="6" borderColor="#00ff8888" borderWidth="1">
+  <text fontSize="10" fontWeight="bold" color="#00ff88">STRATEGY</text>
+  <text name="strat-player" fontSize="9" color="#00e5ff">Your: --</text>
+  <text name="strat-dealer" fontSize="9" color="#ff4444">Dealer: --</text>
+  <text name="strat-advice" fontSize="12" fontWeight="bold" color="#ffaa00">--</text>
+</container>

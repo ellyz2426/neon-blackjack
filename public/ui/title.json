@@ -124,6 +124,28 @@
             "sourceTag": "text",
             "type": "custom",
             "children": [
+              "HAND HISTORY"
+            ],
+            "properties": {
+              "name": "btn-history",
+              "fontsize": "14",
+              "color": "#44aaff",
+              "backgroundcolor": "#001a33",
+              "padding": "6",
+              "paddingleft": "24",
+              "paddingright": "24",
+              "borderradius": "4",
+              "bordercolor": "#44aaff",
+              "borderwidth": "1",
+              "cursor": "pointer",
+              "hoverBackgroundcolor": "#112244"
+            },
+            "dataUid": "uid-9"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
               "CARD SKINS"
             ],
             "properties": {
@@ -140,7 +162,7 @@
               "cursor": "pointer",
               "hoverBackgroundcolor": "#331a00"
             },
-            "dataUid": "uid-9"
+            "dataUid": "uid-10"
           },
           {
             "sourceTag": "text",
@@ -162,7 +184,7 @@
               "cursor": "pointer",
               "hoverBackgroundcolor": "#222244"
             },
-            "dataUid": "uid-10"
+            "dataUid": "uid-11"
           },
           {
             "sourceTag": "text",
@@ -184,7 +206,7 @@
               "cursor": "pointer",
               "hoverBackgroundcolor": "#222222"
             },
-            "dataUid": "uid-11"
+            "dataUid": "uid-12"
           }
         ],
         "properties": {
@@ -207,7 +229,7 @@
           "color": "#666666",
           "margintop": "4"
         },
-        "dataUid": "uid-12"
+        "dataUid": "uid-13"
       }
     ],
     "properties": {
@@ -230,7 +252,7 @@
         "column": 0
       },
       "end": {
-        "line": 13,
+        "line": 14,
         "column": 12
       }
     },
@@ -260,7 +282,7 @@
         "column": 2
       },
       "end": {
-        "line": 11,
+        "line": 12,
         "column": 14
       }
     },
@@ -311,7 +333,7 @@
       },
       "end": {
         "line": 8,
-        "column": 251
+        "column": 255
       }
     },
     "uid-10": {
@@ -321,7 +343,7 @@
       },
       "end": {
         "line": 9,
-        "column": 252
+        "column": 251
       }
     },
     "uid-11": {
@@ -331,16 +353,26 @@
       },
       "end": {
         "line": 10,
-        "column": 244
+        "column": 252
       }
     },
     "uid-12": {
       "start": {
-        "line": 12,
+        "line": 11,
+        "column": 4
+      },
+      "end": {
+        "line": 11,
+        "column": 244
+      }
+    },
+    "uid-13": {
+      "start": {
+        "line": 13,
         "column": 2
       },
       "end": {
-        "line": 12,
+        "line": 13,
         "column": 92
       }
     }

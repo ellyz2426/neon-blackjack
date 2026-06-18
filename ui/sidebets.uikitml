@@ -1,0 +1,18 @@
+<container flexDirection="column" alignItems="center" gap="4" padding="10" backgroundColor="#000a18" borderRadius="8" borderColor="#ff00ff" borderWidth="1">
+  <text fontSize="14" fontWeight="bold" color="#ff00ff">SIDE BETS</text>
+  <container flexDirection="column" gap="3" marginTop="2">
+    <text name="pp-bet" fontSize="10" color="#00e5ff">Perfect Pairs: 0</text>
+    <container flexDirection="row" gap="3">
+      <text name="btn-pp-10" fontSize="9" color="#ff00ff" backgroundColor="#1a0033" padding="4" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#ff00ff" borderWidth="1" cursor="pointer">+10</text>
+      <text name="btn-pp-25" fontSize="9" color="#ff00ff" backgroundColor="#1a0033" padding="4" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#ff00ff" borderWidth="1" cursor="pointer">+25</text>
+      <text name="btn-pp-50" fontSize="9" color="#ff00ff" backgroundColor="#1a0033" padding="4" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#ff00ff" borderWidth="1" cursor="pointer">+50</text>
+    </container>
+    <text name="bet-213" fontSize="10" color="#ffaa00">21+3: 0</text>
+    <container flexDirection="row" gap="3">
+      <text name="btn-213-10" fontSize="9" color="#ffaa00" backgroundColor="#1a1100" padding="4" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#ffaa00" borderWidth="1" cursor="pointer">+10</text>
+      <text name="btn-213-25" fontSize="9" color="#ffaa00" backgroundColor="#1a1100" padding="4" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#ffaa00" borderWidth="1" cursor="pointer">+25</text>
+      <text name="btn-213-50" fontSize="9" color="#ffaa00" backgroundColor="#1a1100" padding="4" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#ffaa00" borderWidth="1" cursor="pointer">+50</text>
+    </container>
+    <text name="btn-sb-clear" fontSize="9" color="#888888" backgroundColor="#111111" padding="4" paddingLeft="12" paddingRight="12" borderRadius="3" borderColor="#444444" borderWidth="1" cursor="pointer">CLEAR</text>
+  </container>
+</container>

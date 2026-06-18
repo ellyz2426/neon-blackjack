@@ -1,0 +1,16 @@
+<container flexDirection="column" alignItems="center" gap="4" padding="12" backgroundColor="#000a18" borderRadius="8" borderColor="#00e5ff" borderWidth="1">
+  <text fontSize="18" fontWeight="bold" color="#00e5ff">HAND HISTORY</text>
+  <container flexDirection="column" gap="2" marginTop="4">
+    <text name="hist-1" fontSize="9" color="#00e5ff">---</text>
+    <text name="hist-2" fontSize="9" color="#00e5ff">---</text>
+    <text name="hist-3" fontSize="9" color="#00e5ff">---</text>
+    <text name="hist-4" fontSize="9" color="#00e5ff">---</text>
+    <text name="hist-5" fontSize="9" color="#00e5ff">---</text>
+    <text name="hist-6" fontSize="9" color="#00e5ff">---</text>
+    <text name="hist-7" fontSize="9" color="#00e5ff">---</text>
+    <text name="hist-8" fontSize="9" color="#00e5ff">---</text>
+    <text name="hist-9" fontSize="9" color="#00e5ff">---</text>
+    <text name="hist-10" fontSize="9" color="#00e5ff">---</text>
+  </container>
+  <text name="btn-history-back" fontSize="12" color="#888888" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#444444" borderWidth="1" cursor="pointer" marginTop="4">BACK</text>
+</container>

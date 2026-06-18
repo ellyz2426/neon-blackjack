@@ -31,6 +31,16 @@
       <text name="theme-val" fontSize="10" color="#00e5ff" width="80" textAlign="center">Neon Holodeck</text>
       <text name="btn-theme-next" fontSize="10" color="#888888" backgroundColor="#112233" padding="3" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#888888" borderWidth="1" cursor="pointer">&gt;</text>
     </container>
+    <container flexDirection="row" gap="6" alignItems="center">
+      <text fontSize="10" color="#aaaaaa" width="80">Strategy</text>
+      <text name="btn-strategy-toggle" fontSize="10" color="#00ff88" backgroundColor="#112233" padding="3" paddingLeft="12" paddingRight="12" borderRadius="3" borderColor="#00ff88" borderWidth="1" cursor="pointer">Toggle</text>
+      <text name="strategy-val" fontSize="10" color="#00e5ff" width="30" textAlign="center">OFF</text>
+    </container>
+    <container flexDirection="row" gap="6" alignItems="center">
+      <text fontSize="10" color="#aaaaaa" width="80">Side Bets</text>
+      <text name="btn-sidebets-toggle" fontSize="10" color="#ff00ff" backgroundColor="#112233" padding="3" paddingLeft="12" paddingRight="12" borderRadius="3" borderColor="#ff00ff" borderWidth="1" cursor="pointer">Toggle</text>
+      <text name="sidebets-val" fontSize="10" color="#00e5ff" width="30" textAlign="center">ON</text>
+    </container>
   </container>
   <text name="btn-settings-back" fontSize="12" color="#666666" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#666666" borderWidth="1" cursor="pointer" marginTop="6">BACK</text>
 </container>

@@ -375,6 +375,9 @@ class BlackjackGame extends createSystem({
 	toastPanel: { required: [PanelUI, PanelDocument], where: [eq(PanelUI, 'config', './ui/toast.json')] },
 	countingPanel: { required: [PanelUI, PanelDocument], where: [eq(PanelUI, 'config', './ui/counting.json')] },
 	dealerInfoPanel: { required: [PanelUI, PanelDocument], where: [eq(PanelUI, 'config', './ui/dealerinfo.json')] },
+	sidebetsPanel: { required: [PanelUI, PanelDocument], where: [eq(PanelUI, 'config', './ui/sidebets.json')] },
+	strategyPanel: { required: [PanelUI, PanelDocument], where: [eq(PanelUI, 'config', './ui/strategy.json')] },
+	historyPanel: { required: [PanelUI, PanelDocument], where: [eq(PanelUI, 'config', './ui/history.json')] },
 }) {
 	private audio = new AudioManager();
 	private particles!: ParticlePool;
@@ -466,6 +469,19 @@ class BlackjackGame extends createSystem({
 	// Card dealing animation
 	private animatingCards: { card: Card; mesh: Group; startPos: Vector3; endPos: Vector3; timer: number; duration: number; onDone: () => void }[] = [];
 
+	// Side bets
+	private sideBetPP = 0; // Perfect Pairs bet
+	private sideBet213 = 0; // 21+3 bet
+	private sideBetsEnabled = true;
+	private showStrategy = false;
+
+	// Chip stacks
+	private chipMeshes: Mesh[] = [];
+	private chipGroup!: Group;
+
+	// Hand history
+	private handHistory: { player: number; dealer: number; result: string; bet: number; payout: number; mode: string }[] = [];
+
 	get theme() { return THEMES[this.themeIdx]; }
 	get activeHand(): Hand | undefined { return this.playerHands[this.activeHandIdx]; }
 
@@ -479,6 +495,8 @@ class BlackjackGame extends createSystem({
 		this.createTable();
 		this.cardGroup = new Group();
 		this.world.scene.add(this.cardGroup);
+		this.chipGroup = new Group();
+		this.world.scene.add(this.chipGroup);
 		this.createHandIndicator();
 		this.createPanels();
 		this.setupInput();
@@ -498,6 +516,9 @@ class BlackjackGame extends createSystem({
 		this.audio.masterVol = loadData('masterVol', 0.7);
 		this.audio.sfxVol = loadData('sfxVol', 0.8);
 		this.audio.musicVol = loadData('musicVol', 0.3);
+		this.handHistory = loadData('history', []);
+		this.showStrategy = loadData('showStrategy', false);
+		this.sideBetsEnabled = loadData('sideBetsEnabled', true);
 	}
 
 	private saveAllData() {
@@ -512,6 +533,8 @@ class BlackjackGame extends createSystem({
 		saveData('masterVol', this.audio.masterVol);
 		saveData('sfxVol', this.audio.sfxVol);
 		saveData('musicVol', this.audio.musicVol);
+		saveData('showStrategy', this.showStrategy);
+		saveData('sideBetsEnabled', this.sideBetsEnabled);
 	}
 
 	// ===== ENVIRONMENT =====
@@ -857,16 +880,16 @@ class BlackjackGame extends createSystem({
 		const configs = [
 			'title', 'modeselect', 'betting', 'actions', 'hud', 'gameover',
 			'pause', 'leaderboard', 'achievements', 'stats', 'skins', 'settings',
-			'help', 'toast', 'counting', 'dealerinfo',
+			'help', 'toast', 'counting', 'dealerinfo', 'sidebets', 'strategy', 'history',
 		];
 
 		for (const name of configs) {
-			const entity = this.world.createEntity();
+			const entity = (this.world as any).createTransformEntity();
 			const panelConfig: any = { config: `./ui/${name}.json` };
 
 			entity.addComponent(PanelUI, panelConfig);
 
-			// HUD and toast follow the player
+			// HUD, toast, and strategy follow the player
 			if (name === 'hud' || name === 'toast') {
 				entity.addComponent(Follower);
 				const fov = entity.getVectorView(Follower, 'offsetPosition');
@@ -879,6 +902,12 @@ class BlackjackGame extends createSystem({
 				const fov = entity.getVectorView(Follower, 'offsetPosition');
 				fov[0] = 0.35; fov[1] = 0.1; fov[2] = -0.6;
 			}
+			// Strategy advisor follows on left side
+			else if (name === 'strategy') {
+				entity.addComponent(Follower);
+				const fov = entity.getVectorView(Follower, 'offsetPosition');
+				fov[0] = -0.35; fov[1] = 0.1; fov[2] = -0.6;
+			}
 			else {
 				entity.addComponent(ScreenSpace);
 			}
@@ -889,12 +918,14 @@ class BlackjackGame extends createSystem({
 			'titlePanel', 'modePanel', 'bettingPanel', 'actionsPanel', 'hudPanel',
 			'gameoverPanel', 'pausePanel', 'lbPanel', 'achvPanel', 'statsPanel',
 			'skinsPanel', 'settingsPanel', 'helpPanel', 'toastPanel', 'countingPanel', 'dealerInfoPanel',
+			'sidebetsPanel', 'strategyPanel', 'historyPanel',
 		] as const;
 
 		const panelNames = [
 			'title', 'modeselect', 'betting', 'actions', 'hud',
 			'gameover', 'pause', 'leaderboard', 'achievements', 'stats',
 			'skins', 'settings', 'help', 'toast', 'counting', 'dealerinfo',
+			'sidebets', 'strategy', 'history',
 		];
 
 		for (let i = 0; i < queryNames.length; i++) {
@@ -925,6 +956,7 @@ class BlackjackGame extends createSystem({
 				btn('btn-skins', () => { this.refreshSkins(); this.setState('skins'); });
 				btn('btn-settings', () => { this.refreshSettings(); this.setState('settings'); });
 				btn('btn-help', () => this.setState('help'));
+				btn('btn-history', () => { this.refreshHistory(); this.setState('help'); });
 				break;
 
 			case 'modeselect':
@@ -1003,11 +1035,27 @@ class BlackjackGame extends createSystem({
 				btn('btn-decks-up', () => this.adjustDecks(1));
 				btn('btn-theme-prev', () => this.cycleTheme(-1));
 				btn('btn-theme-next', () => this.cycleTheme(1));
+				btn('btn-strategy-toggle', () => { this.showStrategy = !this.showStrategy; this.refreshSettings(); });
+				btn('btn-sidebets-toggle', () => { this.sideBetsEnabled = !this.sideBetsEnabled; this.refreshSettings(); });
 				btn('btn-settings-back', () => { this.saveAllData(); this.setState('title'); });
 				break;
 
 			case 'help':
 				btn('btn-help-back', () => this.setState('title'));
+				break;
+
+			case 'sidebets':
+				btn('btn-pp-10', () => this.addSideBet('pp', 10));
+				btn('btn-pp-25', () => this.addSideBet('pp', 25));
+				btn('btn-pp-50', () => this.addSideBet('pp', 50));
+				btn('btn-213-10', () => this.addSideBet('213', 10));
+				btn('btn-213-25', () => this.addSideBet('213', 25));
+				btn('btn-213-50', () => this.addSideBet('213', 50));
+				btn('btn-sb-clear', () => this.clearSideBets());
+				break;
+
+			case 'history':
+				btn('btn-history-back', () => this.setState('title'));
 				break;
 		}
 	}
@@ -1043,12 +1091,12 @@ class BlackjackGame extends createSystem({
 		const allPanels = [
 			'title', 'modeselect', 'betting', 'actions', 'hud', 'gameover',
 			'pause', 'leaderboard', 'achievements', 'stats', 'skins', 'settings',
-			'help', 'toast', 'counting', 'dealerinfo',
+			'help', 'toast', 'counting', 'dealerinfo', 'sidebets', 'strategy', 'history',
 		];
 		const visible: Record<GameState, string[]> = {
 			title: ['title'],
 			modeSelect: ['modeselect'],
-			betting: ['betting', 'hud'],
+			betting: ['betting', 'hud', 'sidebets'],
 			dealing: ['hud', 'dealerinfo'],
 			playerTurn: ['actions', 'hud', 'dealerinfo'],
 			dealerTurn: ['hud', 'dealerinfo'],
@@ -1066,6 +1114,9 @@ class BlackjackGame extends createSystem({
 		const show = new Set(visible[this.state] || []);
 		if (this.mode === 'counting' && ['betting', 'dealing', 'playerTurn', 'dealerTurn', 'resolving', 'gameover'].includes(this.state)) {
 			show.add('counting');
+		}
+		if (this.showStrategy && ['playerTurn'].includes(this.state)) {
+			show.add('strategy');
 		}
 		if (this.toastTimer > 0) show.add('toast');
 
@@ -1300,6 +1351,9 @@ class BlackjackGame extends createSystem({
 		this.setText('dealerinfo', 'dealer-value', `${RANK_VALUES[dealerUpCard.rank]}`);
 		this.setText('dealerinfo', 'dealer-status', 'Showing');
 
+		// Resolve side bets immediately after deal
+		this.resolveSideBets();
+
 		if (isBlackjack(this.playerHands[0].cards)) {
 			this.playerHands[0].blackjack = true;
 			if (isBlackjack(this.dealerCards)) {
@@ -1316,6 +1370,8 @@ class BlackjackGame extends createSystem({
 		this.speedTimer = this.speedTimeLimit;
 		this.setState('playerTurn');
 		this.refreshActions();
+		this.refreshStrategy();
+		this.updateChipStacks();
 	}
 
 	// ===== PLAYER ACTIONS =====
@@ -1689,6 +1745,13 @@ class BlackjackGame extends createSystem({
 
 		this.checkAchievements();
 		this.saveAllData();
+		this.addToHistory(
+			handValue(hand.cards),
+			handValue(this.dealerCards),
+			result === 'blackjack' ? 'BJ' : result.toUpperCase(),
+			hand.bet,
+			payout - hand.bet,
+		);
 		this.showResult(result, handIdx, payout);
 	}
 
@@ -1778,6 +1841,8 @@ class BlackjackGame extends createSystem({
 		} else {
 			this.setText('actions', 'hand-indicator', '');
 		}
+		this.refreshStrategy();
+		this.updateChipStacks();
 	}
 
 	private refreshHUD() {
@@ -1869,6 +1934,8 @@ class BlackjackGame extends createSystem({
 		this.setText('settings', 'music-val', `${Math.round(this.audio.musicVol * 100)}%`);
 		this.setText('settings', 'decks-val', `${this.numDecks}`);
 		this.setText('settings', 'theme-val', this.theme.name);
+		this.setText('settings', 'strategy-val', this.showStrategy ? 'ON' : 'OFF');
+		this.setText('settings', 'sidebets-val', this.sideBetsEnabled ? 'ON' : 'OFF');
 	}
 
 	// ===== SETTINGS =====
@@ -1930,7 +1997,213 @@ class BlackjackGame extends createSystem({
 		this.leaderboard = this.leaderboard.slice(0, 20);
 	}
 
-	// ===== ACHIEVEMENTS =====
+	// ===== SIDE BETS =====
+	private addSideBet(type: 'pp' | '213', amount: number) {
+		if (!this.sideBetsEnabled) return;
+		if (type === 'pp') {
+			if (this.sideBetPP + amount <= this.bank) {
+				this.sideBetPP += amount;
+				this.audio.playChip();
+			}
+		} else {
+			if (this.sideBet213 + amount <= this.bank) {
+				this.sideBet213 += amount;
+				this.audio.playChip();
+			}
+		}
+		this.refreshSideBets();
+	}
+
+	private clearSideBets() {
+		this.sideBetPP = 0;
+		this.sideBet213 = 0;
+		this.refreshSideBets();
+	}
+
+	private refreshSideBets() {
+		this.setText('sidebets', 'pp-bet', `Perfect Pairs: ${this.sideBetPP}`);
+		this.setText('sidebets', 'bet-213', `21+3: ${this.sideBet213}`);
+	}
+
+	private resolveSideBets() {
+		if (this.playerHands.length === 0 || this.dealerCards.length < 2) return;
+		const p1 = this.playerHands[0].cards[0];
+		const p2 = this.playerHands[0].cards[1];
+		const d1 = this.dealerCards[0];
+
+		// Perfect Pairs
+		if (this.sideBetPP > 0) {
+			this.bank -= this.sideBetPP;
+			if (p1.rank === p2.rank) {
+				let mult = 6; // Mixed pair
+				if (p1.suit === p2.suit) { mult = 30; } // Perfect pair
+				else if (SUIT_COLORS[p1.suit] === SUIT_COLORS[p2.suit]) { mult = 12; } // Colored pair
+				const payout = this.sideBetPP * mult;
+				this.bank += payout;
+				const pairType = mult === 30 ? 'Perfect Pair' : mult === 12 ? 'Colored Pair' : 'Mixed Pair';
+				this.showToast(`${pairType}! +${payout}`);
+				this.audio.playWin();
+				this.particles.burst(-0.3, PLAYER_Y + 0.1, PLAYER_Z, 0xff00ff, 15);
+			}
+		}
+
+		// 21+3 (Poker hand with player's 2 cards + dealer up card)
+		if (this.sideBet213 > 0) {
+			this.bank -= this.sideBet213;
+			const cards = [p1, p2, d1];
+			const ranks = cards.map(c => RANKS.indexOf(c.rank));
+			const suits = cards.map(c => c.suit);
+			const values = cards.map(c => RANK_VALUES[c.rank]);
+
+			const allSameSuit = suits[0] === suits[1] && suits[1] === suits[2];
+			const allSameRank = ranks[0] === ranks[1] && ranks[1] === ranks[2];
+			const sorted = [...ranks].sort((a, b) => a - b);
+			const isStraight = (sorted[2] - sorted[1] === 1 && sorted[1] - sorted[0] === 1) ||
+				(sorted[0] === 0 && sorted[1] === 11 && sorted[2] === 12); // A-Q-K wrap
+
+			let mult = 0;
+			let handName = '';
+			if (allSameRank && allSameSuit) { mult = 100; handName = 'Suited Trips'; }
+			else if (isStraight && allSameSuit) { mult = 35; handName = 'Straight Flush'; }
+			else if (allSameRank) { mult = 30; handName = 'Three of a Kind'; }
+			else if (isStraight) { mult = 10; handName = 'Straight'; }
+			else if (allSameSuit) { mult = 5; handName = 'Flush'; }
+
+			if (mult > 0) {
+				const payout = this.sideBet213 * mult;
+				this.bank += payout;
+				this.showToast(`21+3 ${handName}! +${payout}`);
+				this.audio.playWin();
+				this.particles.burst(0.3, PLAYER_Y + 0.1, PLAYER_Z, 0xffaa00, 15);
+			}
+		}
+
+		this.sideBetPP = 0;
+		this.sideBet213 = 0;
+	}
+
+	// ===== BASIC STRATEGY ADVISOR =====
+	private getStrategyAdvice(): string {
+		const hand = this.activeHand;
+		if (!hand || hand.cards.length < 2) return '';
+		const dealerUp = this.dealerCards.length > 0 ? RANK_VALUES[this.dealerCards[0].rank] : 0;
+		const pVal = handValue(hand.cards);
+		const soft = isSoft(hand.cards);
+		const canSp = canSplit(hand);
+
+		// Split recommendations
+		if (canSp) {
+			const pairVal = RANK_VALUES[hand.cards[0].rank];
+			if (pairVal === 11) return 'SPLIT (Always split Aces)';
+			if (pairVal === 8) return 'SPLIT (Always split 8s)';
+			if (pairVal === 10) return 'STAND (Never split 10s)';
+			if (pairVal === 5) return dealerUp <= 9 ? 'DOUBLE' : 'HIT';
+			if (pairVal === 4) return dealerUp >= 5 && dealerUp <= 6 ? 'SPLIT' : 'HIT';
+			if (pairVal === 9) return dealerUp === 7 || dealerUp >= 10 ? 'STAND' : 'SPLIT';
+			if (pairVal === 7) return dealerUp <= 7 ? 'SPLIT' : 'HIT';
+			if (pairVal === 6) return dealerUp <= 6 ? 'SPLIT' : 'HIT';
+			if (pairVal === 3 || pairVal === 2) return dealerUp <= 7 ? 'SPLIT' : 'HIT';
+		}
+
+		// Soft hands
+		if (soft && hand.cards.length === 2) {
+			if (pVal >= 19) return 'STAND';
+			if (pVal === 18) return dealerUp >= 9 ? 'HIT' : dealerUp <= 6 ? 'DOUBLE or STAND' : 'STAND';
+			if (pVal === 17) return dealerUp >= 3 && dealerUp <= 6 ? 'DOUBLE' : 'HIT';
+			if (pVal >= 15 && pVal <= 16) return dealerUp >= 4 && dealerUp <= 6 ? 'DOUBLE' : 'HIT';
+			if (pVal >= 13 && pVal <= 14) return dealerUp >= 5 && dealerUp <= 6 ? 'DOUBLE' : 'HIT';
+		}
+
+		// Hard hands
+		if (pVal >= 17) return 'STAND';
+		if (pVal >= 13 && pVal <= 16) return dealerUp <= 6 ? 'STAND' : 'HIT';
+		if (pVal === 12) return dealerUp >= 4 && dealerUp <= 6 ? 'STAND' : 'HIT';
+		if (pVal === 11) return 'DOUBLE';
+		if (pVal === 10) return dealerUp <= 9 ? 'DOUBLE' : 'HIT';
+		if (pVal === 9) return dealerUp >= 3 && dealerUp <= 6 ? 'DOUBLE' : 'HIT';
+		if (pVal <= 8) return 'HIT';
+
+		return 'HIT';
+	}
+
+	private refreshStrategy() {
+		if (!this.showStrategy) return;
+		const advice = this.getStrategyAdvice();
+		this.setText('strategy', 'strat-advice', advice);
+		const hand = this.activeHand;
+		if (hand) {
+			const dealerUp = this.dealerCards.length > 0 ? this.dealerCards[0].rank : '?';
+			this.setText('strategy', 'strat-player', `Your: ${handStr(hand.cards)}`);
+			this.setText('strategy', 'strat-dealer', `Dealer: ${dealerUp}`);
+		}
+	}
+
+	// ===== CHIP STACK VISUALS =====
+	private updateChipStacks() {
+		for (const m of this.chipMeshes) this.chipGroup.remove(m);
+		this.chipMeshes = [];
+
+		if (this.state !== 'betting' && this.state !== 'playerTurn' && this.state !== 'dealing' &&
+			this.state !== 'dealerTurn' && this.state !== 'resolving') return;
+
+		const bet = this.activeHand?.bet || this.currentBet;
+		const chips = this.calculateChips(bet);
+		const chipGeo = new CylinderGeometry(0.025, 0.025, 0.005, 12);
+		const chipColors = [0xffffff, 0xff3344, 0x00e5ff, 0x00ff88, 0x111111, 0xff8800];
+		const chipVals = [1, 5, 10, 25, 100, 500];
+		let stackY = 0;
+
+		for (let i = chips.length - 1; i >= 0; i--) {
+			for (let j = 0; j < chips[i]; j++) {
+				const mat = new MeshStandardMaterial({
+					color: chipColors[i % chipColors.length],
+					roughness: 0.4, metalness: 0.3,
+				});
+				const chip = new Mesh(chipGeo, mat);
+				chip.position.set(-0.55, TABLE_Y + 0.025 + stackY, TABLE_Z + 0.15);
+				this.chipGroup.add(chip);
+				this.chipMeshes.push(chip);
+				stackY += 0.006;
+			}
+		}
+	}
+
+	private calculateChips(bet: number): number[] {
+		const vals = [500, 100, 25, 10, 5, 1];
+		const counts: number[] = [];
+		let remaining = bet;
+		for (const v of vals) {
+			const count = Math.min(5, Math.floor(remaining / v));
+			counts.push(count);
+			remaining -= count * v;
+		}
+		return counts;
+	}
+
+	// ===== HAND HISTORY =====
+	private addToHistory(playerVal: number, dealerVal: number, result: string, bet: number, payout: number) {
+		this.handHistory.unshift({
+			player: playerVal,
+			dealer: dealerVal,
+			result,
+			bet,
+			payout,
+			mode: MODE_NAMES[this.mode],
+		});
+		if (this.handHistory.length > 20) this.handHistory.pop();
+		saveData('history', this.handHistory);
+	}
+
+	private refreshHistory() {
+		for (let i = 0; i < 10; i++) {
+			const h = this.handHistory[i];
+			const text = h
+				? `${h.result}: ${h.player} vs ${h.dealer} | ${h.payout >= 0 ? '+' : ''}${h.payout} (${h.mode})`
+				: '---';
+			this.setText('history', `hist-${i + 1}`, text);
+		}
+	}
+
 	private getAchievements(): Achievement[] {
 		const c = this.career;
 		return [

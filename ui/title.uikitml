@@ -9,6 +9,7 @@
     <text name="btn-history" fontSize="14" color="#44aaff" backgroundColor="#001a33" padding="6" paddingLeft="24" paddingRight="24" borderRadius="4" borderColor="#44aaff" borderWidth="1" cursor="pointer" hover-backgroundColor="#112244">HAND HISTORY</text>
     <text name="btn-skins" fontSize="14" color="#ff8800" backgroundColor="#001a33" padding="6" paddingLeft="24" paddingRight="24" borderRadius="4" borderColor="#ff8800" borderWidth="1" cursor="pointer" hover-backgroundColor="#331a00">CARD SKINS</text>
     <text name="btn-settings" fontSize="14" color="#8888ff" backgroundColor="#001a33" padding="6" paddingLeft="24" paddingRight="24" borderRadius="4" borderColor="#8888ff" borderWidth="1" cursor="pointer" hover-backgroundColor="#222244">SETTINGS</text>
+    <text name="btn-bankroll" fontSize="14" color="#ffcc00" backgroundColor="#001a33" padding="6" paddingLeft="24" paddingRight="24" borderRadius="4" borderColor="#ffcc00" borderWidth="1" cursor="pointer" hover-backgroundColor="#332200">BANKROLL</text>
     <text name="btn-help" fontSize="14" color="#aaaaaa" backgroundColor="#001a33" padding="6" paddingLeft="24" paddingRight="24" borderRadius="4" borderColor="#aaaaaa" borderWidth="1" cursor="pointer" hover-backgroundColor="#222222">HELP</text>
   </container>
   <text name="level-display" fontSize="9" color="#666666" marginTop="4">Lv.1 - Newbie</text>

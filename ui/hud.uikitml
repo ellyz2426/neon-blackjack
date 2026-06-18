@@ -26,4 +26,7 @@
   <container flexDirection="column" alignItems="center">
     <text name="hud-streak" fontSize="10" fontWeight="bold" color="#ffaa00"></text>
   </container>
+  <container flexDirection="column" alignItems="center">
+    <text name="jackpot-display" fontSize="9" fontWeight="bold" color="#ffaa00"></text>
+  </container>
 </container>

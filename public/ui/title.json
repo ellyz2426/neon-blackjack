@@ -190,6 +190,28 @@
             "sourceTag": "text",
             "type": "custom",
             "children": [
+              "BANKROLL"
+            ],
+            "properties": {
+              "name": "btn-bankroll",
+              "fontsize": "14",
+              "color": "#ffcc00",
+              "backgroundcolor": "#001a33",
+              "padding": "6",
+              "paddingleft": "24",
+              "paddingright": "24",
+              "borderradius": "4",
+              "bordercolor": "#ffcc00",
+              "borderwidth": "1",
+              "cursor": "pointer",
+              "hoverBackgroundcolor": "#332200"
+            },
+            "dataUid": "uid-12"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
               "HELP"
             ],
             "properties": {
@@ -206,7 +228,7 @@
               "cursor": "pointer",
               "hoverBackgroundcolor": "#222222"
             },
-            "dataUid": "uid-12"
+            "dataUid": "uid-13"
           }
         ],
         "properties": {
@@ -229,7 +251,7 @@
           "color": "#666666",
           "margintop": "4"
         },
-        "dataUid": "uid-13"
+        "dataUid": "uid-14"
       }
     ],
     "properties": {
@@ -252,7 +274,7 @@
         "column": 0
       },
       "end": {
-        "line": 14,
+        "line": 15,
         "column": 12
       }
     },
@@ -282,7 +304,7 @@
         "column": 2
       },
       "end": {
-        "line": 12,
+        "line": 13,
         "column": 14
       }
     },
@@ -363,16 +385,26 @@
       },
       "end": {
         "line": 11,
-        "column": 244
+        "column": 252
       }
     },
     "uid-13": {
       "start": {
-        "line": 13,
+        "line": 12,
+        "column": 4
+      },
+      "end": {
+        "line": 12,
+        "column": 244
+      }
+    },
+    "uid-14": {
+      "start": {
+        "line": 14,
         "column": 2
       },
       "end": {
-        "line": 13,
+        "line": 14,
         "column": 92
       }
     }

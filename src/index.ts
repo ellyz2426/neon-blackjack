@@ -36,8 +36,8 @@ import {
 } from '@iwsdk/core';
 
 // ===== TYPES =====
-type GameState = 'title' | 'modeSelect' | 'betting' | 'dealing' | 'playerTurn' | 'dealerTurn' | 'resolving' | 'gameover' | 'paused' | 'leaderboard' | 'achievements' | 'stats' | 'skins' | 'settings' | 'help';
-type GameMode = 'classic' | 'speed' | 'highstakes' | 'counting' | 'daily' | 'survival' | 'tournament' | 'practice' | 'doubleExposure';
+type GameState = 'title' | 'modeSelect' | 'betting' | 'dealing' | 'playerTurn' | 'dealerTurn' | 'resolving' | 'gameover' | 'paused' | 'leaderboard' | 'achievements' | 'stats' | 'skins' | 'settings' | 'help' | 'bankroll';
+type GameMode = 'classic' | 'speed' | 'highstakes' | 'counting' | 'daily' | 'survival' | 'tournament' | 'practice' | 'doubleExposure' | 'multihand';
 type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
 type Rank = 'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K';
 
@@ -112,6 +112,7 @@ const MODE_NAMES: Record<GameMode, string> = {
 	classic: 'Classic', speed: 'Speed Round', highstakes: 'High Stakes',
 	counting: 'Counting Trainer', daily: 'Daily Challenge', survival: 'Survival',
 	tournament: 'Tournament', practice: 'Practice', doubleExposure: 'Double Exposure',
+	multihand: 'Multi-Hand',
 };
 
 const SKIN_COLORS = [0x0044aa, 0xaa0022, 0x008844, 0x6600aa, 0xaa8800, 0xffffff, 0xff6600, 0x4444cc];
@@ -197,6 +198,10 @@ class AudioManager {
 	playDouble() { this.tone(880, 'triangle', 0.1, 0.12); this.tone(1320, 'sine', 0.12, 0.08); }
 	playAchievement() { [660, 784, 880, 1047, 1320].forEach((f, i) => setTimeout(() => this.tone(f, 'sine', 0.15, 0.1), i * 50)); }
 	playLevelUp() { [440, 554, 659, 880, 1047, 1320].forEach((f, i) => setTimeout(() => this.tone(f, 'sine', 0.2, 0.12), i * 70)); }
+	playShuffle() { for (let i = 0; i < 6; i++) setTimeout(() => this.tone(1500 + Math.random() * 2000, 'sine', 0.02, 0.04), i * 30); }
+	playJackpot() { [523, 659, 784, 988, 1175, 1319, 1568, 1760].forEach((f, i) => setTimeout(() => this.tone(f, 'sine', 0.3, 0.15), i * 60)); }
+	playInsurance() { this.tone(600, 'triangle', 0.12, 0.08); this.tone(750, 'sine', 0.1, 0.06); }
+	playSideBetWin() { [880, 1100, 1320].forEach((f, i) => setTimeout(() => this.tone(f, 'sine', 0.15, 0.1), i * 50)); }
 	updateVolumes() {
 		if (this.masterGain) this.masterGain.gain.value = this.masterVol;
 		if (this.sfxGain) this.sfxGain.gain.value = this.sfxVol;
@@ -379,6 +384,7 @@ class BlackjackGame extends createSystem({
 	strategyPanel: { required: [PanelUI, PanelDocument], where: [eq(PanelUI, 'config', './ui/strategy.json')] },
 	historyPanel: { required: [PanelUI, PanelDocument], where: [eq(PanelUI, 'config', './ui/history.json')] },
 	tutorialPanel: { required: [PanelUI, PanelDocument], where: [eq(PanelUI, 'config', './ui/tutorial.json')] },
+	bankrollPanel: { required: [PanelUI, PanelDocument], where: [eq(PanelUI, 'config', './ui/bankroll.json')] },
 }) {
 	private audio = new AudioManager();
 	private particles!: ParticlePool;
@@ -507,6 +513,30 @@ class BlackjackGame extends createSystem({
 	private streakGlowIntensity = 0;
 	private streakFloor: Mesh | null = null;
 
+	// Progressive jackpot
+	private jackpot = 0;
+	private jackpotDisplay: { group: Group; digitMeshes: Mesh[] } | null = null;
+	private jackpotFlashTimer = 0;
+
+	// Bankroll tracking
+	private bankrollHistory: number[] = [];
+	private bankrollPeak = 10000;
+	private bankrollLow = 10000;
+
+	// Dealer commentary
+	private dealerCommentaryCooldown = 0;
+	private lastCommentary = '';
+
+	// Shoe penetration indicator
+	private shoeIndicator: { barFill: Mesh; barBg: Mesh } | null = null;
+
+	// Multi-hand mode
+	private multiHandCount = 2;
+	private multiHandBets: number[] = [];
+
+	// Casino atmosphere
+	private casinoDecor: Group[] = [];
+
 	get theme() { return THEMES[this.themeIdx]; }
 	get activeHand(): Hand | undefined { return this.playerHands[this.activeHandIdx]; }
 
@@ -526,6 +556,9 @@ class BlackjackGame extends createSystem({
 		this.createDealerFigure();
 		this.createNeonSigns();
 		this.createStreakFloor();
+		this.createJackpotDisplay();
+		this.createShoeIndicator();
+		this.createCasinoAtmosphere();
 		this.createPanels();
 		this.setupInput();
 		this.sessionStartTime = performance.now();
@@ -548,6 +581,10 @@ class BlackjackGame extends createSystem({
 		this.handHistory = loadData('history', []);
 		this.showStrategy = loadData('showStrategy', false);
 		this.sideBetsEnabled = loadData('sideBetsEnabled', true);
+		this.jackpot = loadData('jackpot', 0);
+		this.bankrollHistory = loadData('bankrollHistory', []);
+		this.bankrollPeak = loadData('bankrollPeak', this.bank);
+		this.bankrollLow = loadData('bankrollLow', this.bank);
 	}
 
 	private saveAllData() {
@@ -564,6 +601,10 @@ class BlackjackGame extends createSystem({
 		saveData('musicVol', this.audio.musicVol);
 		saveData('showStrategy', this.showStrategy);
 		saveData('sideBetsEnabled', this.sideBetsEnabled);
+		saveData('jackpot', this.jackpot);
+		saveData('bankrollHistory', this.bankrollHistory);
+		saveData('bankrollPeak', this.bankrollPeak);
+		saveData('bankrollLow', this.bankrollLow);
 	}
 
 	// ===== ENVIRONMENT =====
@@ -908,22 +949,237 @@ class BlackjackGame extends createSystem({
 		}
 	}
 
+	// ===== PROGRESSIVE JACKPOT =====
+	private createJackpotDisplay() {
+		const group = new Group();
+		const bgGeo = new BoxGeometry(0.8, 0.18, 0.02);
+		const bgMat = new MeshStandardMaterial({ color: 0x0a0a2a, roughness: 0.3, metalness: 0.5 });
+		const bg = new Mesh(bgGeo, bgMat);
+		bg.position.set(0, 2.6, -3.9);
+		group.add(bg);
+		const borderGeo = new BoxGeometry(0.84, 0.22, 0.005);
+		const borderMat = new MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.6 });
+		const border = new Mesh(borderGeo, borderMat);
+		border.position.set(0, 2.6, -3.89);
+		group.add(border);
+		for (const xOff of [-0.44, 0.44]) {
+			const pillarGeo = new CylinderGeometry(0.015, 0.015, 0.25, 6);
+			const pillarMat = new MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.5 });
+			const pillar = new Mesh(pillarGeo, pillarMat);
+			pillar.position.set(xOff, 2.6, -3.88);
+			group.add(pillar);
+		}
+		this.jackpotDisplay = { group, digitMeshes: [] };
+		this.world.scene.add(group);
+	}
+
+	private updateJackpotDisplay(time: number) {
+		if (!this.jackpotDisplay) return;
+		const border = this.jackpotDisplay.group.children[1] as Mesh;
+		if (border) {
+			(border.material as MeshBasicMaterial).opacity = 0.4 + 0.2 * Math.sin(time * 2);
+		}
+	}
+
+	private contributeToJackpot(bet: number) {
+		this.jackpot += Math.floor(bet * 0.02);
+	}
+
+	private checkJackpotWin(): boolean {
+		if (this.jackpot <= 0) return false;
+		const hand = this.activeHand;
+		if (!hand || hand.cards.length < 2) return false;
+		if (hand.cards.length === 2 && hand.blackjack && hand.cards[0].suit === hand.cards[1].suit) {
+			const won = this.jackpot;
+			this.bank += won;
+			this.audio.playJackpot();
+			this.showToast(`JACKPOT WON! $${Math.floor(won).toLocaleString()}!`);
+			this.dealerComment('jackpot');
+			this.jackpot = 0;
+			this.particles.burst(0, TABLE_Y + 0.5, TABLE_Z, 0xffaa00, 40);
+			this.saveAllData();
+			return true;
+		}
+		if (hand.cards.length >= 3 && hand.cards.filter(c => c.rank === '7').length >= 3) {
+			const won = Math.floor(this.jackpot * 0.5);
+			this.bank += won;
+			this.audio.playJackpot();
+			this.showToast(`TRIPLE 7s! $${won.toLocaleString()} JACKPOT!`);
+			this.dealerComment('jackpot');
+			this.jackpot -= won;
+			this.particles.burst(0, TABLE_Y + 0.5, TABLE_Z, 0xff6600, 30);
+			this.saveAllData();
+			return true;
+		}
+		return false;
+	}
+
+	// ===== SHOE PENETRATION INDICATOR =====
+	private createShoeIndicator() {
+		const barBgGeo = new BoxGeometry(0.02, 0.25, 0.02);
+		const barBgMat = new MeshStandardMaterial({ color: 0x222222, transparent: true, opacity: 0.6 });
+		const barBg = new Mesh(barBgGeo, barBgMat);
+		barBg.position.set(0.85, TABLE_Y + 0.15, TABLE_Z - 0.15);
+		const barFillGeo = new BoxGeometry(0.018, 0.24, 0.018);
+		const barFillMat = new MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.7 });
+		const barFill = new Mesh(barFillGeo, barFillMat);
+		barFill.position.set(0.85, TABLE_Y + 0.15, TABLE_Z - 0.15);
+		this.world.scene.add(barBg);
+		this.world.scene.add(barFill);
+		this.shoeIndicator = { barFill, barBg };
+	}
+
+	private updateShoeIndicator() {
+		if (!this.shoeIndicator) return;
+		const pct = this.shoe.remaining / this.shoe.totalCards;
+		this.shoeIndicator.barFill.scale.y = Math.max(0.01, pct);
+		this.shoeIndicator.barFill.position.y = TABLE_Y + 0.03 + (0.24 * pct) / 2;
+		const mat = this.shoeIndicator.barFill.material as MeshBasicMaterial;
+		if (pct > 0.5) mat.color.set(0x00ff88);
+		else if (pct > 0.25) mat.color.set(0xffaa00);
+		else mat.color.set(0xff3344);
+	}
+
+	// ===== CASINO ATMOSPHERE =====
+	private createCasinoAtmosphere() {
+		const scene = this.world.scene;
+		for (const xSign of [-1, 1]) {
+			const ropeGroup = new Group();
+			const postGeo = new CylinderGeometry(0.025, 0.025, 0.8, 8);
+			const postMat = new MeshStandardMaterial({ color: 0xaa8800, metalness: 0.8, roughness: 0.2 });
+			const post = new Mesh(postGeo, postMat);
+			post.position.set(xSign * 1.6, 0.4, TABLE_Z);
+			ropeGroup.add(post);
+			const capGeo = new SphereGeometry(0.035, 8, 8);
+			const capMat = new MeshStandardMaterial({ color: 0xccaa00, metalness: 0.8, roughness: 0.2 });
+			const cap = new Mesh(capGeo, capMat);
+			cap.position.set(xSign * 1.6, 0.82, TABLE_Z);
+			ropeGroup.add(cap);
+			const baseGeo = new CylinderGeometry(0.05, 0.06, 0.02, 12);
+			const baseMat = new MeshStandardMaterial({ color: 0xaa8800, metalness: 0.6 });
+			const base = new Mesh(baseGeo, baseMat);
+			base.position.set(xSign * 1.6, 0.01, TABLE_Z);
+			ropeGroup.add(base);
+			scene.add(ropeGroup);
+			this.casinoDecor.push(ropeGroup);
+		}
+		const ropeVerts: number[] = [];
+		for (let i = 0; i <= 20; i++) {
+			const t = i / 20;
+			const x = -1.6 + t * 3.2;
+			const sag = Math.sin(t * Math.PI) * 0.08;
+			ropeVerts.push(x, 0.7 - sag, TABLE_Z);
+		}
+		const ropeGeo = new BufferGeometry();
+		ropeGeo.setAttribute('position', new Float32BufferAttribute(ropeVerts, 3));
+		scene.add(new LineSegments(ropeGeo, new LineBasicMaterial({ color: 0xcc2222 })));
+		for (const [cx, cz] of [[0.6, TABLE_Z + 0.25], [-0.6, TABLE_Z + 0.25]] as [number, number][]) {
+			const stackGroup = new Group();
+			const chipColors = [0xff3344, 0x0044aa, 0x00aa44, 0xffaa00, 0x9933ff];
+			for (let i = 0; i < 5; i++) {
+				const chipGeo = new CylinderGeometry(0.025, 0.025, 0.005, 12);
+				const chipMat = new MeshStandardMaterial({ color: chipColors[i % chipColors.length], metalness: 0.3, roughness: 0.5 });
+				const chip = new Mesh(chipGeo, chipMat);
+				chip.position.set(cx + (Math.random() - 0.5) * 0.01, TABLE_Y + 0.025 + i * 0.006, cz);
+				stackGroup.add(chip);
+			}
+			scene.add(stackGroup);
+			this.casinoDecor.push(stackGroup);
+		}
+		const glassGroup = new Group();
+		const stemMat = new MeshStandardMaterial({ color: 0xcccccc, transparent: true, opacity: 0.4, metalness: 0.5 });
+		const stem = new Mesh(new CylinderGeometry(0.003, 0.003, 0.08, 6), stemMat);
+		stem.position.set(-0.9, TABLE_Y + 0.04, PLAYER_Z + 0.1);
+		glassGroup.add(stem);
+		const bowl = new Mesh(new CylinderGeometry(0.04, 0.015, 0.04, 8, 1, true), new MeshStandardMaterial({ color: 0xaaddff, transparent: true, opacity: 0.25, metalness: 0.3 }));
+		bowl.position.set(-0.9, TABLE_Y + 0.1, PLAYER_Z + 0.1);
+		glassGroup.add(bowl);
+		const liquid = new Mesh(new CylinderGeometry(0.035, 0.013, 0.025, 8), new MeshBasicMaterial({ color: 0x33aaff, transparent: true, opacity: 0.35 }));
+		liquid.position.set(-0.9, TABLE_Y + 0.09, PLAYER_Z + 0.1);
+		glassGroup.add(liquid);
+		const glassBase = new Mesh(new CylinderGeometry(0.02, 0.025, 0.005, 8), stemMat);
+		glassBase.position.set(-0.9, TABLE_Y + 0.003, PLAYER_Z + 0.1);
+		glassGroup.add(glassBase);
+		scene.add(glassGroup);
+		this.casinoDecor.push(glassGroup);
+	}
+
+	// ===== DEALER COMMENTARY =====
+	private dealerComment(event: string) {
+		if (this.dealerCommentaryCooldown > 0) return;
+		const comments: Record<string, string[]> = {
+			blackjack: ['Natural 21! Well played.', 'Blackjack! Cards favor you.', 'A natural - impressive.'],
+			playerBust: ['Bust. The house thanks you.', 'Over 21. Better luck next time.', 'Went a bit too far.'],
+			dealerBust: ['I busted. Your win.', 'Over 21 for the dealer.', 'The cards betrayed me.'],
+			playerWin: ['Nice hand.', 'Well played.', 'You got me this time.'],
+			dealerWin: ['The house wins.', 'Not your hand.', 'Better luck next round.'],
+			push: ['Push. Nobody wins.', 'A tie - we go again.', 'Dead heat.'],
+			bigBet: ['High roller moves.', 'Confidence. I respect that.', 'Going big tonight.'],
+			lowBank: ['Running low. Choose wisely.', 'Careful with that bankroll.'],
+			hotStreak: ['You are on fire!', 'Impressive streak!', 'The cards love you tonight.'],
+			insurance: ['Protecting yourself? Smart.', 'Insurance noted.'],
+			split: ['Splitting - bold move.', 'Two hands it is.'],
+			doubleDown: ['Doubling down. All or nothing.', 'Double it is - good luck.'],
+			shuffle: ['Fresh shoe. New chances.', 'Reshuffled. Reset your count.'],
+			surrender: ['Living to fight another hand.', 'Tactical retreat. Wise.'],
+			jackpot: ['The jackpot is yours!', 'Incredible! Jackpot winner!'],
+		};
+		const pool = comments[event];
+		if (!pool || pool.length === 0) return;
+		let msg: string;
+		do {
+			msg = pool[Math.floor(Math.random() * pool.length)];
+		} while (msg === this.lastCommentary && pool.length > 1);
+		this.lastCommentary = msg;
+		this.dealerCommentaryCooldown = 3;
+		this.showToast(`Dealer: "${msg}"`);
+	}
+
+	// ===== BANKROLL TRACKING =====
+	private trackBankroll() {
+		this.bankrollHistory.push(this.bank);
+		if (this.bankrollHistory.length > 50) this.bankrollHistory = this.bankrollHistory.slice(-50);
+		if (this.bank > this.bankrollPeak) this.bankrollPeak = this.bank;
+		if (this.bank < this.bankrollLow) this.bankrollLow = this.bank;
+	}
+
+	private refreshBankrollPanel() {
+		const sessionMin = ((performance.now() - this.sessionStartTime) / 60000).toFixed(1);
+		this.setText('bankroll', 'bankroll-session', `Session: ${this.sessionEarnings >= 0 ? '+' : ''}$${this.sessionEarnings.toLocaleString()} (${sessionMin}m)`);
+		this.setText('bankroll', 'bankroll-peak', `Peak: $${this.bankrollPeak.toLocaleString()}`);
+		this.setText('bankroll', 'bankroll-low', `Low: $${this.bankrollLow.toLocaleString()}`);
+		this.setText('bankroll', 'bankroll-current', `Current: $${this.bank.toLocaleString()}`);
+		this.setText('bankroll', 'bankroll-hands', `Hands: ${this.sessionHandsPlayed}`);
+		const wr = this.sessionHandsPlayed > 0 ? ((this.sessionWins / this.sessionHandsPlayed) * 100).toFixed(1) : '0.0';
+		this.setText('bankroll', 'bankroll-winrate', `Win: ${wr}%`);
+		const recent = this.bankrollHistory.slice(-20);
+		if (recent.length > 0) {
+			const min = Math.min(...recent);
+			const max = Math.max(...recent);
+			const range = max - min || 1;
+			for (let r = 0; r < 5; r++) {
+				const threshold = max - (r / 4) * range;
+				let line = '';
+				for (const val of recent) {
+					line += val >= threshold ? '#' : '.';
+				}
+				this.setText('bankroll', `bankroll-row${r}`, line);
+			}
+		}
+	}
+
 	// ===== XR CONTROLLER INPUT =====
 	private handleXRInput() {
 		const input = this.world.input;
 		if (!input) return;
-
 		const rightGP = input.gamepads.right;
 		const leftGP = input.gamepads.left;
 		if (!rightGP && !leftGP) return;
-
-		// Read buttons from right controller
 		const rightTrigger = rightGP?.getButtonValue(InputComponent.Trigger) ?? 0;
 		const leftTrigger = leftGP?.getButtonValue(InputComponent.Trigger) ?? 0;
 		const aButton = rightGP?.getButtonValue(InputComponent.A_Button) ?? 0;
 		const bButton = rightGP?.getButtonValue(InputComponent.B_Button) ?? 0;
 		const rightStick = rightGP?.getAxesValues(InputComponent.Thumbstick);
-
 		if (this.xrStickCooldown > 0) return;
 
 		// Track VR session
@@ -1115,7 +1371,7 @@ class BlackjackGame extends createSystem({
 			'title', 'modeselect', 'betting', 'actions', 'hud', 'gameover',
 			'pause', 'leaderboard', 'achievements', 'stats', 'skins', 'settings',
 			'help', 'toast', 'counting', 'dealerinfo', 'sidebets', 'strategy', 'history',
-			'tutorial',
+			'tutorial', 'bankroll',
 		];
 
 		for (const name of configs) {
@@ -1160,14 +1416,14 @@ class BlackjackGame extends createSystem({
 			'titlePanel', 'modePanel', 'bettingPanel', 'actionsPanel', 'hudPanel',
 			'gameoverPanel', 'pausePanel', 'lbPanel', 'achvPanel', 'statsPanel',
 			'skinsPanel', 'settingsPanel', 'helpPanel', 'toastPanel', 'countingPanel', 'dealerInfoPanel',
-			'sidebetsPanel', 'strategyPanel', 'historyPanel', 'tutorialPanel',
+			'sidebetsPanel', 'strategyPanel', 'historyPanel', 'tutorialPanel', 'bankrollPanel',
 		] as const;
 
 		const panelNames = [
 			'title', 'modeselect', 'betting', 'actions', 'hud',
 			'gameover', 'pause', 'leaderboard', 'achievements', 'stats',
 			'skins', 'settings', 'help', 'toast', 'counting', 'dealerinfo',
-			'sidebets', 'strategy', 'history', 'tutorial',
+			'sidebets', 'strategy', 'history', 'tutorial', 'bankroll',
 		];
 
 		for (let i = 0; i < queryNames.length; i++) {
@@ -1197,6 +1453,7 @@ class BlackjackGame extends createSystem({
 				btn('btn-stats', () => { this.refreshStats(); this.setState('stats'); });
 				btn('btn-skins', () => { this.refreshSkins(); this.setState('skins'); });
 				btn('btn-settings', () => { this.refreshSettings(); this.setState('settings'); });
+				btn('btn-bankroll', () => { this.refreshBankrollPanel(); this.setState('bankroll'); });
 				btn('btn-help', () => this.setState('help'));
 				btn('btn-history', () => { this.refreshHistory(); this.setState('help'); });
 				break;
@@ -1211,6 +1468,7 @@ class BlackjackGame extends createSystem({
 				btn('btn-tournament', () => this.startMode('tournament'));
 				btn('btn-practice', () => this.startMode('practice'));
 				btn('btn-dblexp', () => this.startMode('doubleExposure'));
+				btn('btn-multihand', () => this.startMode('multihand'));
 				btn('btn-back', () => this.setState('title'));
 				break;
 
@@ -1304,6 +1562,10 @@ class BlackjackGame extends createSystem({
 			case 'history':
 				btn('btn-history-back', () => this.setState('title'));
 				break;
+
+			case 'bankroll':
+				btn('bankroll-close-btn', () => this.setState('title'));
+				break;
 		}
 	}
 
@@ -1355,7 +1617,7 @@ class BlackjackGame extends createSystem({
 			'title', 'modeselect', 'betting', 'actions', 'hud', 'gameover',
 			'pause', 'leaderboard', 'achievements', 'stats', 'skins', 'settings',
 			'help', 'toast', 'counting', 'dealerinfo', 'sidebets', 'strategy', 'history',
-			'tutorial',
+			'tutorial', 'bankroll',
 		];
 		const visible: Record<GameState, string[]> = {
 			title: ['title'],
@@ -1373,6 +1635,7 @@ class BlackjackGame extends createSystem({
 			skins: ['skins'],
 			settings: ['settings'],
 			help: ['tutorial'],
+			bankroll: ['bankroll'],
 		};
 
 		const show = new Set(visible[this.state] || []);
@@ -1452,6 +1715,9 @@ class BlackjackGame extends createSystem({
 
 		this.updateNeonSigns(time);
 		this.updateStreakEffects(dt, time);
+		this.updateJackpotDisplay(time);
+		this.updateShoeIndicator();
+		if (this.dealerCommentaryCooldown > 0) this.dealerCommentaryCooldown -= dt;
 
 		for (let i = this.animatingCards.length - 1; i >= 0; i--) {
 			const anim = this.animatingCards[i];
@@ -1535,6 +1801,10 @@ class BlackjackGame extends createSystem({
 		} else if (mode === 'doubleExposure') {
 			// Double Exposure: both dealer cards face up, BJ pays even money
 			this.bank = loadData('bank', 10000);
+		} else if (mode === 'multihand') {
+			// Multi-hand: deal 2 hands simultaneously
+			this.multiHandCount = 2;
+			this.bank = loadData('bank', 10000);
 		} else if (mode === 'daily') {
 			const seed = getDailySeed();
 			if (this.career.lastDaily === String(seed)) {
@@ -1577,8 +1847,19 @@ class BlackjackGame extends createSystem({
 
 		this.bank -= this.currentBet;
 		this.lastBet = this.currentBet;
+		this.contributeToJackpot(this.currentBet);
+		if (this.currentBet >= 500) this.dealerComment('bigBet');
+		if (this.bank < 500) this.dealerComment('lowBank');
 		this.clearCards();
-		this.playerHands = [{ cards: [], bet: this.currentBet, doubled: false, surrendered: false, stood: false, busted: false, blackjack: false, splitAces: false }];
+
+		// Multi-hand mode: deal multiple positions
+		const handCount = this.mode === 'multihand' ? this.multiHandCount : 1;
+		const betPerHand = this.mode === 'multihand' ? Math.floor(this.currentBet / handCount) : this.currentBet;
+
+		this.playerHands = [];
+		for (let h = 0; h < handCount; h++) {
+			this.playerHands.push({ cards: [], bet: betPerHand, doubled: false, surrendered: false, stood: false, busted: false, blackjack: false, splitAces: false });
+		}
 		this.activeHandIdx = 0;
 		this.dealerCards = [];
 		this.insuranceBet = 0;
@@ -1586,12 +1867,16 @@ class BlackjackGame extends createSystem({
 		// In Double Exposure mode, both dealer cards are face up
 		const dealerSecondFaceUp = this.mode === 'doubleExposure';
 
-		this.dealQueue = [
-			{ target: 'player', handIdx: 0, faceUp: true },
-			{ target: 'dealer', handIdx: 0, faceUp: true },
-			{ target: 'player', handIdx: 0, faceUp: true },
-			{ target: 'dealer', handIdx: 0, faceUp: dealerSecondFaceUp },
-		];
+		this.dealQueue = [];
+		// Deal first card to each player hand, then dealer, then second cards
+		for (let h = 0; h < handCount; h++) {
+			this.dealQueue.push({ target: 'player', handIdx: h, faceUp: true });
+		}
+		this.dealQueue.push({ target: 'dealer', handIdx: 0, faceUp: true });
+		for (let h = 0; h < handCount; h++) {
+			this.dealQueue.push({ target: 'player', handIdx: h, faceUp: true });
+		}
+		this.dealQueue.push({ target: 'dealer', handIdx: 0, faceUp: dealerSecondFaceUp });
 		this.dealTimer = 0.1;
 		this.dealerDealAnim = 1.5; // Trigger dealer arm animation
 		this.setState('dealing');
@@ -1738,6 +2023,7 @@ class BlackjackGame extends createSystem({
 		hand.bet *= 2;
 		hand.doubled = true;
 		this.audio.playDouble();
+		this.dealerComment('doubleDown');
 
 		const card = this.shoe.deal();
 		card.faceUp = true;
@@ -1768,6 +2054,7 @@ class BlackjackGame extends createSystem({
 
 		this.bank -= hand.bet;
 		this.audio.playSplit();
+		this.dealerComment('split');
 
 		const splitCard = hand.cards.pop()!;
 		const splitAces = hand.cards[0].rank === 'A';
@@ -1813,6 +2100,8 @@ class BlackjackGame extends createSystem({
 		this.bank -= insAmount;
 		this.insuranceBet = insAmount;
 		this.audio.playChip();
+		this.audio.playInsurance();
+		this.dealerComment('insurance');
 		this.showToast(`Insurance: ${insAmount}`);
 	}
 
@@ -1835,6 +2124,7 @@ class BlackjackGame extends createSystem({
 		this.saveAllData();
 
 		this.audio.playLose();
+		this.dealerComment('surrender');
 		this.setText('gameover', 'result-title', 'SURRENDERED');
 		this.setText('gameover', 'result-payout', `-${hand.bet - refund}`);
 		this.setText('gameover', 'result-player', `Your Hand: ${handValue(hand.cards)}`);
@@ -1869,6 +2159,12 @@ class BlackjackGame extends createSystem({
 			if (isBlackjack(this.dealerCards)) {
 				const payout = this.insuranceBet * 3;
 				this.bank += payout;
+
+		// Track bankroll for history
+		this.trackBankroll();
+
+		// Check jackpot win conditions
+		this.checkJackpotWin();
 				this.career.insuranceWins++;
 				this.showToast(`Insurance pays ${payout}!`);
 			} else {
@@ -2079,10 +2375,13 @@ class BlackjackGame extends createSystem({
 		const dealerVal = handValue(this.dealerCards);
 
 		let title = '';
-		if (result === 'blackjack') { title = 'BLACKJACK!'; }
-		else if (result === 'win') { title = 'YOU WIN!'; this.audio.playWin(); }
-		else if (result === 'push') { title = 'PUSH'; this.audio.playPush(); }
-		else { title = 'DEALER WINS'; this.audio.playLose(); }
+		if (result === 'blackjack') { title = 'BLACKJACK!'; this.dealerComment('blackjack'); }
+		else if (result === 'win') { title = 'YOU WIN!'; this.audio.playWin(); this.dealerComment('playerWin'); }
+		else if (result === 'push') { title = 'PUSH'; this.audio.playPush(); this.dealerComment('push'); }
+		else { title = 'DEALER WINS'; this.audio.playLose(); this.dealerComment('dealerWin'); }
+
+		// Hot streak commentary
+		if (this.winStreak >= 5) this.dealerComment('hotStreak');
 
 		this.setText('gameover', 'result-title', title);
 		this.setText('gameover', 'result-payout', payout > 0 ? `+${payout.toLocaleString()}` : '0');
@@ -2194,6 +2493,13 @@ class BlackjackGame extends createSystem({
 			this.setText('hud', 'hud-streak', `Streak: ${this.winStreak}x`);
 		} else {
 			this.setText('hud', 'hud-streak', '');
+		}
+
+		// Jackpot display
+		if (this.jackpot > 0) {
+			this.setText('hud', 'jackpot-display', `JP: $${Math.floor(this.jackpot).toLocaleString()}`);
+		} else {
+			this.setText('hud', 'jackpot-display', '');
 		}
 	}
 
@@ -2630,6 +2936,24 @@ class BlackjackGame extends createSystem({
 			{ id: 'session_100', name: 'Iron Player', desc: 'Play 100 hands in one session', check: () => this.sessionHandsPlayed >= 100 },
 			{ id: 'session_profit', name: 'Profitable Session', desc: 'End a session with 5000+ profit', check: () => this.sessionEarnings >= 5000 },
 			{ id: 'streak_25', name: 'Invincible', desc: 'Win 25 in a row', check: () => c.bestStreak >= 25 },
+			// Round 5 additions
+			{ id: 'jackpot_winner', name: 'Jackpot!', desc: 'Win the progressive jackpot', check: () => this.jackpot === 0 && c.wins >= 1 },
+			{ id: 'triple_7', name: 'Lucky Sevens', desc: 'Hit three 7s in one hand', check: () => {
+				const hand = this.activeHand;
+				return hand ? hand.cards.filter(x => x.rank === '7').length >= 3 : false;
+			}},
+			{ id: 'ten_k_bank', name: 'High Roller', desc: 'Reach $50,000 bankroll', check: () => this.bank >= 50000 },
+			{ id: 'hundred_k_bank', name: 'Mogul', desc: 'Reach $100,000 bankroll', check: () => this.bank >= 100000 },
+			{ id: 'low_bank_win', name: 'Clutch Player', desc: 'Win with under $100 bankroll', check: () => this.bank < 100 && this.bank > 0 },
+			{ id: 'all_modes', name: 'Jack of All Tables', desc: 'Play every game mode', check: () => c.modesPlayed.length >= 10 },
+			{ id: 'surrender_5', name: 'Tactical Mind', desc: 'Surrender 5 hands', check: () => c.surrenders >= 5 },
+			{ id: 'no_bust_25', name: 'Stone Cold', desc: 'Play 25 hands without busting', check: () => c.bestNoBust >= 25 },
+			{ id: 'double_win_5', name: 'Bold Strategy', desc: 'Win 5 doubled hands', check: () => c.doublesWon >= 5 },
+			{ id: 'ten_splits', name: 'Splitter Pro', desc: 'Win 10 split hands', check: () => c.splitsWon >= 10 },
+			{ id: 'session_200', name: 'All Nighter', desc: 'Play 200 hands in a session', check: () => this.sessionHandsPlayed >= 200 },
+			{ id: 'session_10k', name: 'Session King', desc: 'Earn $10,000 in one session', check: () => this.sessionEarnings >= 10000 },
+			{ id: 'bust_50', name: 'Living Dangerously', desc: 'Bust 50 times total', check: () => c.bustCount >= 50 },
+			{ id: 'insurance_5', name: 'Risk Manager', desc: 'Win insurance 5 times', check: () => c.insuranceWins >= 5 },
 		];
 	}
 

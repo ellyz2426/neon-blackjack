@@ -246,6 +246,29 @@
           "alignitems": "center"
         },
         "dataUid": "uid-20"
+      },
+      {
+        "sourceTag": "container",
+        "type": "custom",
+        "children": [
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [],
+            "properties": {
+              "name": "jackpot-display",
+              "fontsize": "9",
+              "fontweight": "bold",
+              "color": "#ffaa00"
+            },
+            "dataUid": "uid-23"
+          }
+        ],
+        "properties": {
+          "flexdirection": "column",
+          "alignitems": "center"
+        },
+        "dataUid": "uid-22"
       }
     ],
     "properties": {
@@ -269,7 +292,7 @@
         "column": 0
       },
       "end": {
-        "line": 28,
+        "line": 31,
         "column": 12
       }
     },
@@ -471,6 +494,26 @@
       "end": {
         "line": 26,
         "column": 83
+      }
+    },
+    "uid-22": {
+      "start": {
+        "line": 28,
+        "column": 2
+      },
+      "end": {
+        "line": 30,
+        "column": 14
+      }
+    },
+    "uid-23": {
+      "start": {
+        "line": 29,
+        "column": 4
+      },
+      "end": {
+        "line": 29,
+        "column": 87
       }
     }
   }

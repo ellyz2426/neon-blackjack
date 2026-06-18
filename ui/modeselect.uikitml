@@ -10,6 +10,7 @@
     <text name="btn-tournament" fontSize="12" color="#8888ff" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#8888ff" borderWidth="1" cursor="pointer">Tournament</text>
     <text name="btn-practice" fontSize="12" color="#aaaaaa" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#aaaaaa" borderWidth="1" cursor="pointer">Practice</text>
     <text name="btn-dblexp" fontSize="12" color="#44ffcc" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#44ffcc" borderWidth="1" cursor="pointer">Double Exposure</text>
+    <text name="btn-multihand" fontSize="12" color="#ff44ff" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#ff44ff" borderWidth="1" cursor="pointer">Multi-Hand</text>
   </container>
   <text name="btn-back" fontSize="12" color="#666666" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#666666" borderWidth="1" cursor="pointer" marginTop="4">BACK</text>
 </container>

@@ -208,6 +208,27 @@
               "cursor": "pointer"
             },
             "dataUid": "uid-12"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Multi-Hand"
+            ],
+            "properties": {
+              "name": "btn-multihand",
+              "fontsize": "12",
+              "color": "#ff44ff",
+              "backgroundcolor": "#001a33",
+              "padding": "5",
+              "paddingleft": "20",
+              "paddingright": "20",
+              "borderradius": "4",
+              "bordercolor": "#ff44ff",
+              "borderwidth": "1",
+              "cursor": "pointer"
+            },
+            "dataUid": "uid-13"
           }
         ],
         "properties": {
@@ -237,7 +258,7 @@
           "cursor": "pointer",
           "margintop": "4"
         },
-        "dataUid": "uid-13"
+        "dataUid": "uid-14"
       }
     ],
     "properties": {
@@ -260,7 +281,7 @@
         "column": 0
       },
       "end": {
-        "line": 14,
+        "line": 15,
         "column": 12
       }
     },
@@ -280,7 +301,7 @@
         "column": 2
       },
       "end": {
-        "line": 12,
+        "line": 13,
         "column": 14
       }
     },
@@ -376,11 +397,21 @@
     },
     "uid-13": {
       "start": {
-        "line": 13,
+        "line": 12,
+        "column": 4
+      },
+      "end": {
+        "line": 12,
+        "column": 223
+      }
+    },
+    "uid-14": {
+      "start": {
+        "line": 14,
         "column": 2
       },
       "end": {
-        "line": 13,
+        "line": 14,
         "column": 224
       }
     }

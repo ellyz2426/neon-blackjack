@@ -1,0 +1,442 @@
+{
+  "element": {
+    "sourceTag": "panel",
+    "type": "custom",
+    "children": [
+      {
+        "sourceTag": "column",
+        "type": "custom",
+        "children": [
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "BANKROLL TRACKER"
+            ],
+            "properties": {
+              "id": "bankroll-title",
+              "fontSize": "20",
+              "fontWeight": "bold",
+              "color": "#00e5ff"
+            },
+            "dataUid": "uid-3"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Session: +$0"
+            ],
+            "properties": {
+              "id": "bankroll-session",
+              "fontSize": "14",
+              "color": "#88cccc"
+            },
+            "dataUid": "uid-4"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Peak: $10,000"
+            ],
+            "properties": {
+              "id": "bankroll-peak",
+              "fontSize": "12",
+              "color": "#00ff88"
+            },
+            "dataUid": "uid-5"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Low: $10,000"
+            ],
+            "properties": {
+              "id": "bankroll-low",
+              "fontSize": "12",
+              "color": "#ff4466"
+            },
+            "dataUid": "uid-6"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Current: $10,000"
+            ],
+            "properties": {
+              "id": "bankroll-current",
+              "fontSize": "16",
+              "color": "#ffffff"
+            },
+            "dataUid": "uid-7"
+          },
+          {
+            "sourceTag": "row",
+            "type": "custom",
+            "children": [],
+            "properties": {
+              "width": "100%",
+              "height": "2",
+              "backgroundColor": "#00e5ff33",
+              "marginTop": "4"
+            },
+            "dataUid": "uid-8"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Last 20 Hands"
+            ],
+            "properties": {
+              "id": "bankroll-graph-label",
+              "fontSize": "11",
+              "color": "#668888"
+            },
+            "dataUid": "uid-9"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "."
+            ],
+            "properties": {
+              "id": "bankroll-row0",
+              "fontSize": "10",
+              "color": "#00e5ff"
+            },
+            "dataUid": "uid-10"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "."
+            ],
+            "properties": {
+              "id": "bankroll-row1",
+              "fontSize": "10",
+              "color": "#00e5ff"
+            },
+            "dataUid": "uid-11"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "."
+            ],
+            "properties": {
+              "id": "bankroll-row2",
+              "fontSize": "10",
+              "color": "#00e5ff"
+            },
+            "dataUid": "uid-12"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "."
+            ],
+            "properties": {
+              "id": "bankroll-row3",
+              "fontSize": "10",
+              "color": "#00e5ff"
+            },
+            "dataUid": "uid-13"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "."
+            ],
+            "properties": {
+              "id": "bankroll-row4",
+              "fontSize": "10",
+              "color": "#00e5ff"
+            },
+            "dataUid": "uid-14"
+          },
+          {
+            "sourceTag": "row",
+            "type": "custom",
+            "children": [
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "Hands: 0"
+                ],
+                "properties": {
+                  "id": "bankroll-hands",
+                  "fontSize": "11",
+                  "color": "#668888"
+                },
+                "dataUid": "uid-16"
+              },
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "Win: 0%"
+                ],
+                "properties": {
+                  "id": "bankroll-winrate",
+                  "fontSize": "11",
+                  "color": "#668888"
+                },
+                "dataUid": "uid-17"
+              }
+            ],
+            "properties": {
+              "width": "100%",
+              "gap": "8",
+              "justifyContent": "center",
+              "marginTop": "4"
+            },
+            "dataUid": "uid-15"
+          },
+          {
+            "sourceTag": "row",
+            "type": "custom",
+            "children": [
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "[ CLOSE ]"
+                ],
+                "properties": {
+                  "id": "bankroll-close-btn",
+                  "fontSize": "14",
+                  "color": "#00e5ff",
+                  "hoverColor": "#ffffff",
+                  "cursor": "pointer"
+                },
+                "dataUid": "uid-19"
+              }
+            ],
+            "properties": {
+              "width": "100%",
+              "justifyContent": "center",
+              "marginTop": "4"
+            },
+            "dataUid": "uid-18"
+          }
+        ],
+        "properties": {
+          "gap": "8",
+          "width": "100%"
+        },
+        "dataUid": "uid-2"
+      }
+    ],
+    "properties": {
+      "width": "420",
+      "height": "320",
+      "backgroundColor": "#0a1a2a",
+      "borderRadius": "12",
+      "padding": "16"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {},
+  "ranges": {
+    "uid-1": {
+      "start": {
+        "line": 0,
+        "column": 0
+      },
+      "end": {
+        "line": 22,
+        "column": 8
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 21,
+        "column": 11
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 2,
+        "column": 4
+      },
+      "end": {
+        "line": 2,
+        "column": 103
+      }
+    },
+    "uid-4": {
+      "start": {
+        "line": 3,
+        "column": 4
+      },
+      "end": {
+        "line": 3,
+        "column": 82
+      }
+    },
+    "uid-5": {
+      "start": {
+        "line": 4,
+        "column": 4
+      },
+      "end": {
+        "line": 4,
+        "column": 80
+      }
+    },
+    "uid-6": {
+      "start": {
+        "line": 5,
+        "column": 4
+      },
+      "end": {
+        "line": 5,
+        "column": 78
+      }
+    },
+    "uid-7": {
+      "start": {
+        "line": 6,
+        "column": 4
+      },
+      "end": {
+        "line": 6,
+        "column": 86
+      }
+    },
+    "uid-8": {
+      "start": {
+        "line": 7,
+        "column": 4
+      },
+      "end": {
+        "line": 7,
+        "column": 83
+      }
+    },
+    "uid-9": {
+      "start": {
+        "line": 8,
+        "column": 4
+      },
+      "end": {
+        "line": 8,
+        "column": 87
+      }
+    },
+    "uid-10": {
+      "start": {
+        "line": 9,
+        "column": 4
+      },
+      "end": {
+        "line": 9,
+        "column": 68
+      }
+    },
+    "uid-11": {
+      "start": {
+        "line": 10,
+        "column": 4
+      },
+      "end": {
+        "line": 10,
+        "column": 68
+      }
+    },
+    "uid-12": {
+      "start": {
+        "line": 11,
+        "column": 4
+      },
+      "end": {
+        "line": 11,
+        "column": 68
+      }
+    },
+    "uid-13": {
+      "start": {
+        "line": 12,
+        "column": 4
+      },
+      "end": {
+        "line": 12,
+        "column": 68
+      }
+    },
+    "uid-14": {
+      "start": {
+        "line": 13,
+        "column": 4
+      },
+      "end": {
+        "line": 13,
+        "column": 68
+      }
+    },
+    "uid-15": {
+      "start": {
+        "line": 14,
+        "column": 4
+      },
+      "end": {
+        "line": 17,
+        "column": 10
+      }
+    },
+    "uid-16": {
+      "start": {
+        "line": 15,
+        "column": 6
+      },
+      "end": {
+        "line": 15,
+        "column": 78
+      }
+    },
+    "uid-17": {
+      "start": {
+        "line": 16,
+        "column": 6
+      },
+      "end": {
+        "line": 16,
+        "column": 79
+      }
+    },
+    "uid-18": {
+      "start": {
+        "line": 18,
+        "column": 4
+      },
+      "end": {
+        "line": 20,
+        "column": 10
+      }
+    },
+    "uid-19": {
+      "start": {
+        "line": 19,
+        "column": 6
+      },
+      "end": {
+        "line": 19,
+        "column": 122
+      }
+    }
+  }
+}

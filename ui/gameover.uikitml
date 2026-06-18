@@ -1,0 +1,15 @@
+<container flexDirection="column" alignItems="center" gap="6" padding="12" backgroundColor="#000a18" borderRadius="8" borderColor="#00e5ff" borderWidth="1">
+  <text name="result-title" fontSize="22" fontWeight="bold" color="#00ff88">YOU WIN!</text>
+  <text name="result-payout" fontSize="14" color="#ffaa00">+200</text>
+  <container flexDirection="column" gap="3" marginTop="4" alignItems="center">
+    <text name="result-player" fontSize="11" color="#00e5ff">Your Hand: 21</text>
+    <text name="result-dealer" fontSize="11" color="#ff4444">Dealer: 18</text>
+    <text name="result-bank" fontSize="11" color="#aaaaaa">Bank: 10,200</text>
+    <text name="result-streak" fontSize="11" color="#ff00ff">Win Streak: 1</text>
+    <text name="result-hands" fontSize="11" color="#888888">Hands Played: 1</text>
+  </container>
+  <container flexDirection="row" gap="6" marginTop="6">
+    <text name="btn-rebet" fontSize="13" color="#00ff88" backgroundColor="#001a11" padding="6" paddingLeft="16" paddingRight="16" borderRadius="4" borderColor="#00ff88" borderWidth="1" cursor="pointer">REBET</text>
+    <text name="btn-menu" fontSize="13" color="#aaaaaa" backgroundColor="#111111" padding="6" paddingLeft="16" paddingRight="16" borderRadius="4" borderColor="#aaaaaa" borderWidth="1" cursor="pointer">MENU</text>
+  </container>
+</container>

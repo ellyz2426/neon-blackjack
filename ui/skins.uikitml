@@ -1,0 +1,16 @@
+<container flexDirection="column" alignItems="center" gap="4" padding="12" backgroundColor="#000a18" borderRadius="8" borderColor="#ff8800" borderWidth="1">
+  <text fontSize="18" fontWeight="bold" color="#ff8800">CARD SKINS</text>
+  <text name="skin-info" fontSize="10" color="#aaaaaa">Select a card back design</text>
+  <container flexDirection="column" gap="3" marginTop="4">
+    <text name="skin-0" fontSize="11" color="#00e5ff" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#00e5ff" borderWidth="1" cursor="pointer">* Classic Blue</text>
+    <text name="skin-1" fontSize="11" color="#ff4444" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#ff4444" borderWidth="1" cursor="pointer">Crimson Red</text>
+    <text name="skin-2" fontSize="11" color="#00ff88" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#00ff88" borderWidth="1" cursor="pointer">Emerald Green</text>
+    <text name="skin-3" fontSize="11" color="#ff00ff" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#ff00ff" borderWidth="1" cursor="pointer">Royal Purple</text>
+    <text name="skin-4" fontSize="11" color="#ffaa00" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#ffaa00" borderWidth="1" cursor="pointer">Golden Ace</text>
+    <text name="skin-5" fontSize="11" color="#ffffff" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#ffffff" borderWidth="1" cursor="pointer">Diamond White</text>
+    <text name="skin-6" fontSize="11" color="#ff6600" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#ff6600" borderWidth="1" cursor="pointer">Blaze Orange</text>
+    <text name="skin-7" fontSize="11" color="#8888ff" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#8888ff" borderWidth="1" cursor="pointer">Void Indigo</text>
+  </container>
+  <text name="skin-unlock-info" fontSize="9" color="#666666" marginTop="2">Win hands to unlock more skins</text>
+  <text name="btn-skins-back" fontSize="12" color="#666666" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#666666" borderWidth="1" cursor="pointer" marginTop="4">BACK</text>
+</container>

@@ -1,0 +1,24 @@
+<container flexDirection="column" alignItems="center" gap="3" padding="12" backgroundColor="#000a18" borderRadius="8" borderColor="#aaaaaa" borderWidth="1">
+  <text fontSize="18" fontWeight="bold" color="#aaaaaa">HOW TO PLAY</text>
+  <container flexDirection="column" gap="2" marginTop="4">
+    <text fontSize="10" color="#00e5ff">Goal: Beat the dealer without going over 21</text>
+    <text fontSize="10" color="#aaaaaa">Number cards = face value</text>
+    <text fontSize="10" color="#aaaaaa">Face cards (J,Q,K) = 10</text>
+    <text fontSize="10" color="#aaaaaa">Ace = 1 or 11</text>
+    <text fontSize="10" color="#ffaa00">HIT - Draw another card</text>
+    <text fontSize="10" color="#ffaa00">STAND - Keep your hand</text>
+    <text fontSize="10" color="#ff00ff">DOUBLE - Double bet, one card</text>
+    <text fontSize="10" color="#8888ff">SPLIT - Split matching cards</text>
+    <text fontSize="10" color="#ffcc00">INSURANCE - Side bet vs dealer ace</text>
+    <text fontSize="10" color="#00ff88">Blackjack pays 3:2</text>
+    <text fontSize="10" color="#00ff88">Insurance pays 2:1</text>
+  </container>
+  <text fontSize="12" fontWeight="bold" color="#00e5ff" marginTop="4">CONTROLS</text>
+  <container flexDirection="column" gap="2" marginTop="2">
+    <text fontSize="9" color="#aaaaaa">Click / VR Trigger - Select</text>
+    <text fontSize="9" color="#aaaaaa">H - Hit, S - Stand</text>
+    <text fontSize="9" color="#aaaaaa">D - Double, P - Split</text>
+    <text fontSize="9" color="#aaaaaa">ESC - Pause</text>
+  </container>
+  <text name="btn-help-back" fontSize="12" color="#666666" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#666666" borderWidth="1" cursor="pointer" marginTop="4">BACK</text>
+</container>

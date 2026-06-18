@@ -1,0 +1,18 @@
+<container flexDirection="column" alignItems="center" gap="6" padding="10" backgroundColor="#000a18" borderRadius="8" borderColor="#ffaa00" borderWidth="1">
+  <text fontSize="16" fontWeight="bold" color="#ffaa00">PLACE YOUR BET</text>
+  <text name="bank-display" fontSize="12" color="#00e5ff">Bank: 10,000</text>
+  <text name="bet-display" fontSize="18" fontWeight="bold" color="#ffaa00">Bet: 100</text>
+  <container flexDirection="row" gap="4" marginTop="4">
+    <text name="btn-10" fontSize="11" color="#888888" backgroundColor="#112233" padding="4" paddingLeft="8" paddingRight="8" borderRadius="4" borderColor="#888888" borderWidth="1" cursor="pointer">10</text>
+    <text name="btn-25" fontSize="11" color="#00cc44" backgroundColor="#112233" padding="4" paddingLeft="8" paddingRight="8" borderRadius="4" borderColor="#00cc44" borderWidth="1" cursor="pointer">25</text>
+    <text name="btn-50" fontSize="11" color="#0088ff" backgroundColor="#112233" padding="4" paddingLeft="8" paddingRight="8" borderRadius="4" borderColor="#0088ff" borderWidth="1" cursor="pointer">50</text>
+    <text name="btn-100" fontSize="11" color="#ff8800" backgroundColor="#112233" padding="4" paddingLeft="8" paddingRight="8" borderRadius="4" borderColor="#ff8800" borderWidth="1" cursor="pointer">100</text>
+  </container>
+  <container flexDirection="row" gap="4">
+    <text name="btn-500" fontSize="11" color="#ff00ff" backgroundColor="#112233" padding="4" paddingLeft="8" paddingRight="8" borderRadius="4" borderColor="#ff00ff" borderWidth="1" cursor="pointer">500</text>
+    <text name="btn-1000" fontSize="11" color="#ff4444" backgroundColor="#112233" padding="4" paddingLeft="8" paddingRight="8" borderRadius="4" borderColor="#ff4444" borderWidth="1" cursor="pointer">1K</text>
+    <text name="btn-clear" fontSize="11" color="#666666" backgroundColor="#112233" padding="4" paddingLeft="8" paddingRight="8" borderRadius="4" borderColor="#666666" borderWidth="1" cursor="pointer">CLR</text>
+    <text name="btn-allin" fontSize="11" color="#ffcc00" backgroundColor="#112233" padding="4" paddingLeft="8" paddingRight="8" borderRadius="4" borderColor="#ffcc00" borderWidth="1" cursor="pointer">ALL</text>
+  </container>
+  <text name="btn-deal" fontSize="14" fontWeight="bold" color="#00ff88" backgroundColor="#002211" padding="6" paddingLeft="30" paddingRight="30" borderRadius="4" borderColor="#00ff88" borderWidth="1" cursor="pointer" marginTop="4">DEAL</text>
+</container>

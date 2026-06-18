@@ -1,0 +1,36 @@
+<container flexDirection="column" alignItems="center" gap="4" padding="12" backgroundColor="#000a18" borderRadius="8" borderColor="#8888ff" borderWidth="1">
+  <text fontSize="18" fontWeight="bold" color="#8888ff">SETTINGS</text>
+  <container flexDirection="column" gap="3" marginTop="4">
+    <container flexDirection="row" gap="6" alignItems="center">
+      <text fontSize="10" color="#aaaaaa" width="80">Master Vol</text>
+      <text name="btn-master-down" fontSize="10" color="#888888" backgroundColor="#112233" padding="3" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#888888" borderWidth="1" cursor="pointer">-</text>
+      <text name="master-val" fontSize="10" color="#00e5ff" width="30" textAlign="center">70%</text>
+      <text name="btn-master-up" fontSize="10" color="#888888" backgroundColor="#112233" padding="3" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#888888" borderWidth="1" cursor="pointer">+</text>
+    </container>
+    <container flexDirection="row" gap="6" alignItems="center">
+      <text fontSize="10" color="#aaaaaa" width="80">SFX Vol</text>
+      <text name="btn-sfx-down" fontSize="10" color="#888888" backgroundColor="#112233" padding="3" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#888888" borderWidth="1" cursor="pointer">-</text>
+      <text name="sfx-val" fontSize="10" color="#00e5ff" width="30" textAlign="center">80%</text>
+      <text name="btn-sfx-up" fontSize="10" color="#888888" backgroundColor="#112233" padding="3" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#888888" borderWidth="1" cursor="pointer">+</text>
+    </container>
+    <container flexDirection="row" gap="6" alignItems="center">
+      <text fontSize="10" color="#aaaaaa" width="80">Music Vol</text>
+      <text name="btn-music-down" fontSize="10" color="#888888" backgroundColor="#112233" padding="3" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#888888" borderWidth="1" cursor="pointer">-</text>
+      <text name="music-val" fontSize="10" color="#00e5ff" width="30" textAlign="center">30%</text>
+      <text name="btn-music-up" fontSize="10" color="#888888" backgroundColor="#112233" padding="3" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#888888" borderWidth="1" cursor="pointer">+</text>
+    </container>
+    <container flexDirection="row" gap="6" alignItems="center">
+      <text fontSize="10" color="#aaaaaa" width="80">Decks</text>
+      <text name="btn-decks-down" fontSize="10" color="#888888" backgroundColor="#112233" padding="3" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#888888" borderWidth="1" cursor="pointer">-</text>
+      <text name="decks-val" fontSize="10" color="#00e5ff" width="30" textAlign="center">6</text>
+      <text name="btn-decks-up" fontSize="10" color="#888888" backgroundColor="#112233" padding="3" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#888888" borderWidth="1" cursor="pointer">+</text>
+    </container>
+    <container flexDirection="row" gap="6" alignItems="center">
+      <text fontSize="10" color="#aaaaaa" width="80">Theme</text>
+      <text name="btn-theme-prev" fontSize="10" color="#888888" backgroundColor="#112233" padding="3" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#888888" borderWidth="1" cursor="pointer">&lt;</text>
+      <text name="theme-val" fontSize="10" color="#00e5ff" width="80" textAlign="center">Neon Holodeck</text>
+      <text name="btn-theme-next" fontSize="10" color="#888888" backgroundColor="#112233" padding="3" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#888888" borderWidth="1" cursor="pointer">&gt;</text>
+    </container>
+  </container>
+  <text name="btn-settings-back" fontSize="12" color="#666666" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#666666" borderWidth="1" cursor="pointer" marginTop="6">BACK</text>
+</container>

@@ -1,0 +1,6 @@
+<container flexDirection="column" alignItems="center" gap="4" padding="10" backgroundColor="#000a18" borderRadius="8" borderColor="#00ff88" borderWidth="1">
+  <text name="count-info" fontSize="12" color="#00e5ff">Running Count: 0</text>
+  <text name="count-true" fontSize="10" color="#ffaa00">True Count: 0.0</text>
+  <text name="count-decks" fontSize="9" color="#888888">Decks remaining: 6</text>
+  <text name="count-advice" fontSize="10" color="#00ff88">Bet low</text>
+</container>

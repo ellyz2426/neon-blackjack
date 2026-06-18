@@ -1,0 +1,18 @@
+<container flexDirection="column" alignItems="center" gap="4" padding="12" backgroundColor="#000a18" borderRadius="8" borderColor="#00ff88" borderWidth="1">
+  <text fontSize="18" fontWeight="bold" color="#00ff88">STATISTICS</text>
+  <container flexDirection="column" gap="2" marginTop="4">
+    <text name="stat-hands" fontSize="10" color="#00e5ff">Hands Played: 0</text>
+    <text name="stat-wins" fontSize="10" color="#00ff88">Wins: 0</text>
+    <text name="stat-losses" fontSize="10" color="#ff4444">Losses: 0</text>
+    <text name="stat-pushes" fontSize="10" color="#ffaa00">Pushes: 0</text>
+    <text name="stat-bjs" fontSize="10" color="#ff00ff">Blackjacks: 0</text>
+    <text name="stat-winrate" fontSize="10" color="#00e5ff">Win Rate: 0%</text>
+    <text name="stat-biggest" fontSize="10" color="#ffaa00">Biggest Win: 0</text>
+    <text name="stat-streak" fontSize="10" color="#00ff88">Best Streak: 0</text>
+    <text name="stat-earnings" fontSize="10" color="#ffaa00">Total Earnings: 0</text>
+    <text name="stat-doubles" fontSize="10" color="#ff00ff">Doubles Won: 0</text>
+    <text name="stat-splits" fontSize="10" color="#8888ff">Splits Won: 0</text>
+    <text name="stat-surrenders" fontSize="10" color="#aaaaaa">Surrenders: 0</text>
+  </container>
+  <text name="btn-stats-back" fontSize="12" color="#666666" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#666666" borderWidth="1" cursor="pointer" marginTop="4">BACK</text>
+</container>

@@ -1,0 +1,22 @@
+<container flexDirection="column" alignItems="center" gap="4" padding="12" backgroundColor="#000a18" borderRadius="8" borderColor="#ff00ff" borderWidth="1">
+  <text fontSize="18" fontWeight="bold" color="#ff00ff">ACHIEVEMENTS</text>
+  <text name="achv-progress" fontSize="10" color="#aaaaaa">0 / 80 unlocked</text>
+  <container flexDirection="column" gap="2" marginTop="4">
+    <text name="achv-1" fontSize="9" color="#00e5ff">---</text>
+    <text name="achv-2" fontSize="9" color="#00e5ff">---</text>
+    <text name="achv-3" fontSize="9" color="#00e5ff">---</text>
+    <text name="achv-4" fontSize="9" color="#00e5ff">---</text>
+    <text name="achv-5" fontSize="9" color="#00e5ff">---</text>
+    <text name="achv-6" fontSize="9" color="#aaaaaa">---</text>
+    <text name="achv-7" fontSize="9" color="#aaaaaa">---</text>
+    <text name="achv-8" fontSize="9" color="#aaaaaa">---</text>
+    <text name="achv-9" fontSize="9" color="#aaaaaa">---</text>
+    <text name="achv-10" fontSize="9" color="#aaaaaa">---</text>
+  </container>
+  <container flexDirection="row" gap="8" marginTop="4">
+    <text name="btn-achv-prev" fontSize="11" color="#888888" backgroundColor="#001a33" padding="4" paddingLeft="12" paddingRight="12" borderRadius="4" borderColor="#888888" borderWidth="1" cursor="pointer">&lt; Prev</text>
+    <text name="achv-page" fontSize="10" color="#666666">1/8</text>
+    <text name="btn-achv-next" fontSize="11" color="#888888" backgroundColor="#001a33" padding="4" paddingLeft="12" paddingRight="12" borderRadius="4" borderColor="#888888" borderWidth="1" cursor="pointer">Next &gt;</text>
+  </container>
+  <text name="btn-achv-back" fontSize="12" color="#666666" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#666666" borderWidth="1" cursor="pointer" marginTop="2">BACK</text>
+</container>

@@ -1,0 +1,22 @@
+<container flexDirection="row" gap="12" padding="6" paddingLeft="12" paddingRight="12" backgroundColor="#000a18cc" borderRadius="6" borderColor="#00e5ff44" borderWidth="1">
+  <container flexDirection="column" alignItems="center">
+    <text fontSize="8" color="#666666">BANK</text>
+    <text name="hud-bank" fontSize="11" fontWeight="bold" color="#00e5ff">10,000</text>
+  </container>
+  <container flexDirection="column" alignItems="center">
+    <text fontSize="8" color="#666666">BET</text>
+    <text name="hud-bet" fontSize="11" fontWeight="bold" color="#ffaa00">100</text>
+  </container>
+  <container flexDirection="column" alignItems="center">
+    <text fontSize="8" color="#666666">PLAYER</text>
+    <text name="hud-player" fontSize="11" fontWeight="bold" color="#00ff88">--</text>
+  </container>
+  <container flexDirection="column" alignItems="center">
+    <text fontSize="8" color="#666666">DEALER</text>
+    <text name="hud-dealer" fontSize="11" fontWeight="bold" color="#ff4444">--</text>
+  </container>
+  <container flexDirection="column" alignItems="center">
+    <text fontSize="8" color="#666666">MODE</text>
+    <text name="hud-mode" fontSize="11" fontWeight="bold" color="#ff00ff">Classic</text>
+  </container>
+</container>

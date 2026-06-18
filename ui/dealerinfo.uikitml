@@ -1,0 +1,5 @@
+<container flexDirection="column" alignItems="center" gap="4" padding="10" backgroundColor="#000a18" borderRadius="8" borderColor="#ff4444" borderWidth="1">
+  <text name="dealer-label" fontSize="14" fontWeight="bold" color="#ff4444">DEALER</text>
+  <text name="dealer-value" fontSize="16" fontWeight="bold" color="#ff4444">--</text>
+  <text name="dealer-status" fontSize="10" color="#aaaaaa"></text>
+</container>

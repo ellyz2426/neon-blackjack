@@ -1,0 +1,13 @@
+<container flexDirection="column" alignItems="center" gap="6" padding="10" backgroundColor="#000a18" borderRadius="8" borderColor="#00e5ff" borderWidth="1">
+  <text name="hand-value" fontSize="16" fontWeight="bold" color="#00e5ff">Your Hand: 0</text>
+  <container flexDirection="row" gap="4">
+    <text name="btn-hit" fontSize="13" fontWeight="bold" color="#00ff88" backgroundColor="#001a11" padding="6" paddingLeft="16" paddingRight="16" borderRadius="4" borderColor="#00ff88" borderWidth="1" cursor="pointer">HIT</text>
+    <text name="btn-stand" fontSize="13" fontWeight="bold" color="#ffaa00" backgroundColor="#1a1100" padding="6" paddingLeft="16" paddingRight="16" borderRadius="4" borderColor="#ffaa00" borderWidth="1" cursor="pointer">STAND</text>
+  </container>
+  <container flexDirection="row" gap="4">
+    <text name="btn-double" fontSize="11" color="#ff00ff" backgroundColor="#1a0011" padding="5" paddingLeft="12" paddingRight="12" borderRadius="4" borderColor="#ff00ff" borderWidth="1" cursor="pointer">DOUBLE</text>
+    <text name="btn-split" fontSize="11" color="#8888ff" backgroundColor="#0a0a1a" padding="5" paddingLeft="12" paddingRight="12" borderRadius="4" borderColor="#8888ff" borderWidth="1" cursor="pointer">SPLIT</text>
+  </container>
+  <text name="btn-insurance" fontSize="10" color="#ffcc00" backgroundColor="#1a1100" padding="4" paddingLeft="12" paddingRight="12" borderRadius="4" borderColor="#ffcc00" borderWidth="1" cursor="pointer">INSURANCE</text>
+  <text name="timer-display" fontSize="10" color="#ff4444"></text>
+</container>

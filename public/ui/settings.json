@@ -551,6 +551,128 @@
               "alignitems": "center"
             },
             "dataUid": "uid-33"
+          },
+          {
+            "sourceTag": "container",
+            "type": "custom",
+            "children": [
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "Auto-Play"
+                ],
+                "properties": {
+                  "fontsize": "10",
+                  "color": "#aaaaaa",
+                  "width": "80"
+                },
+                "dataUid": "uid-38"
+              },
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "Toggle"
+                ],
+                "properties": {
+                  "name": "btn-autoplay-toggle",
+                  "fontsize": "10",
+                  "color": "#ffaa00",
+                  "backgroundcolor": "#112233",
+                  "padding": "3",
+                  "paddingleft": "12",
+                  "paddingright": "12",
+                  "borderradius": "3",
+                  "bordercolor": "#ffaa00",
+                  "borderwidth": "1",
+                  "cursor": "pointer"
+                },
+                "dataUid": "uid-39"
+              },
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "OFF"
+                ],
+                "properties": {
+                  "name": "autoplay-val",
+                  "fontsize": "10",
+                  "color": "#00e5ff",
+                  "width": "30",
+                  "textalign": "center"
+                },
+                "dataUid": "uid-40"
+              }
+            ],
+            "properties": {
+              "flexdirection": "row",
+              "gap": "6",
+              "alignitems": "center"
+            },
+            "dataUid": "uid-37"
+          },
+          {
+            "sourceTag": "container",
+            "type": "custom",
+            "children": [
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "Comps"
+                ],
+                "properties": {
+                  "fontsize": "10",
+                  "color": "#aaaaaa",
+                  "width": "80"
+                },
+                "dataUid": "uid-42"
+              },
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "Redeem 50"
+                ],
+                "properties": {
+                  "name": "btn-spend-comps",
+                  "fontsize": "10",
+                  "color": "#00ff88",
+                  "backgroundcolor": "#112233",
+                  "padding": "3",
+                  "paddingleft": "8",
+                  "paddingright": "8",
+                  "borderradius": "3",
+                  "bordercolor": "#00ff88",
+                  "borderwidth": "1",
+                  "cursor": "pointer"
+                },
+                "dataUid": "uid-43"
+              },
+              {
+                "sourceTag": "text",
+                "type": "custom",
+                "children": [
+                  "0 pts"
+                ],
+                "properties": {
+                  "name": "comps-val",
+                  "fontsize": "10",
+                  "color": "#ffaa00",
+                  "width": "100",
+                  "textalign": "center"
+                },
+                "dataUid": "uid-44"
+              }
+            ],
+            "properties": {
+              "flexdirection": "row",
+              "gap": "6",
+              "alignitems": "center"
+            },
+            "dataUid": "uid-41"
           }
         ],
         "properties": {
@@ -580,7 +702,7 @@
           "cursor": "pointer",
           "margintop": "6"
         },
-        "dataUid": "uid-37"
+        "dataUid": "uid-45"
       }
     ],
     "properties": {
@@ -603,7 +725,7 @@
         "column": 0
       },
       "end": {
-        "line": 45,
+        "line": 55,
         "column": 12
       }
     },
@@ -623,7 +745,7 @@
         "column": 2
       },
       "end": {
-        "line": 43,
+        "line": 53,
         "column": 14
       }
     },
@@ -959,11 +1081,91 @@
     },
     "uid-37": {
       "start": {
+        "line": 43,
+        "column": 4
+      },
+      "end": {
+        "line": 47,
+        "column": 16
+      }
+    },
+    "uid-38": {
+      "start": {
         "line": 44,
-        "column": 2
+        "column": 6
       },
       "end": {
         "line": 44,
+        "column": 69
+      }
+    },
+    "uid-39": {
+      "start": {
+        "line": 45,
+        "column": 6
+      },
+      "end": {
+        "line": 45,
+        "column": 227
+      }
+    },
+    "uid-40": {
+      "start": {
+        "line": 46,
+        "column": 6
+      },
+      "end": {
+        "line": 46,
+        "column": 102
+      }
+    },
+    "uid-41": {
+      "start": {
+        "line": 48,
+        "column": 4
+      },
+      "end": {
+        "line": 52,
+        "column": 16
+      }
+    },
+    "uid-42": {
+      "start": {
+        "line": 49,
+        "column": 6
+      },
+      "end": {
+        "line": 49,
+        "column": 65
+      }
+    },
+    "uid-43": {
+      "start": {
+        "line": 50,
+        "column": 6
+      },
+      "end": {
+        "line": 50,
+        "column": 224
+      }
+    },
+    "uid-44": {
+      "start": {
+        "line": 51,
+        "column": 6
+      },
+      "end": {
+        "line": 51,
+        "column": 102
+      }
+    },
+    "uid-45": {
+      "start": {
+        "line": 54,
+        "column": 2
+      },
+      "end": {
+        "line": 54,
         "column": 233
       }
     }

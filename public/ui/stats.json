@@ -175,6 +175,19 @@
               "color": "#aaaaaa"
             },
             "dataUid": "uid-15"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Comp Points: 0"
+            ],
+            "properties": {
+              "name": "stat-comps",
+              "fontsize": "10",
+              "color": "#ffaa00"
+            },
+            "dataUid": "uid-16"
           }
         ],
         "properties": {
@@ -204,7 +217,7 @@
           "cursor": "pointer",
           "margintop": "4"
         },
-        "dataUid": "uid-16"
+        "dataUid": "uid-17"
       }
     ],
     "properties": {
@@ -227,7 +240,7 @@
         "column": 0
       },
       "end": {
-        "line": 17,
+        "line": 18,
         "column": 12
       }
     },
@@ -247,7 +260,7 @@
         "column": 2
       },
       "end": {
-        "line": 15,
+        "line": 16,
         "column": 14
       }
     },
@@ -373,11 +386,21 @@
     },
     "uid-16": {
       "start": {
-        "line": 16,
+        "line": 15,
+        "column": 4
+      },
+      "end": {
+        "line": 15,
+        "column": 79
+      }
+    },
+    "uid-17": {
+      "start": {
+        "line": 17,
         "column": 2
       },
       "end": {
-        "line": 16,
+        "line": 17,
         "column": 230
       }
     }

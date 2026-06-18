@@ -537,6 +537,27 @@ class BlackjackGame extends createSystem({
 	// Casino atmosphere
 	private casinoDecor: Group[] = [];
 
+	// Card flip animation
+	private flippingCards: { card: Card; mesh: Group; newMesh: Group; timer: number; duration: number; idx: number }[] = [];
+
+	// Comp points
+	private compPoints = 0;
+	private totalCompsEarned = 0;
+	private compLevel = 0;
+
+	// Auto-play
+	private autoPlay = false;
+	private autoPlayDelay = 0;
+
+	// Dynamic theme elements (references for theme switching)
+	private floorMesh: Mesh | null = null;
+	private wallMeshes: Mesh[] = [];
+	private gridLines: LineSegments | null = null;
+	private keyLight: PointLight | null = null;
+	private accentLights: PointLight[] = [];
+	private tableFelt: Mesh | null = null;
+	private tableEdge: Mesh | null = null;
+
 	get theme() { return THEMES[this.themeIdx]; }
 	get activeHand(): Hand | undefined { return this.playerHands[this.activeHandIdx]; }
 
@@ -585,6 +606,10 @@ class BlackjackGame extends createSystem({
 		this.bankrollHistory = loadData('bankrollHistory', []);
 		this.bankrollPeak = loadData('bankrollPeak', this.bank);
 		this.bankrollLow = loadData('bankrollLow', this.bank);
+		this.compPoints = loadData('compPoints', 0);
+		this.totalCompsEarned = loadData('totalCompsEarned', 0);
+		this.compLevel = loadData('compLevel', 0);
+		this.autoPlay = loadData('autoPlay', false);
 	}
 
 	private saveAllData() {
@@ -605,6 +630,10 @@ class BlackjackGame extends createSystem({
 		saveData('bankrollHistory', this.bankrollHistory);
 		saveData('bankrollPeak', this.bankrollPeak);
 		saveData('bankrollLow', this.bankrollLow);
+		saveData('compPoints', this.compPoints);
+		saveData('totalCompsEarned', this.totalCompsEarned);
+		saveData('compLevel', this.compLevel);
+		saveData('autoPlay', this.autoPlay);
 	}
 
 	// ===== ENVIRONMENT =====
@@ -620,13 +649,16 @@ class BlackjackGame extends createSystem({
 		const keyLight = new PointLight(this.theme.accent, 1.5, 10);
 		keyLight.position.set(0, 3, -1);
 		scene.add(keyLight);
+		this.keyLight = keyLight;
 
 		// Accent lights
+		this.accentLights = [];
 		const positions = [[-2, 2, -2], [2, 2, -2], [0, 2.5, 1]];
 		for (const [x, y, z] of positions) {
 			const pl = new PointLight(this.theme.accent, 0.4, 8);
 			pl.position.set(x, y, z);
 			scene.add(pl);
+			this.accentLights.push(pl);
 		}
 
 		// Floor
@@ -636,14 +668,17 @@ class BlackjackGame extends createSystem({
 		floor.rotation.x = -Math.PI / 2;
 		floor.position.y = 0;
 		scene.add(floor);
+		this.floorMesh = floor;
 
 		// Walls
 		const wallMat = new MeshStandardMaterial({ color: this.theme.wall, roughness: 0.8 });
+		this.wallMeshes = [];
 		for (const [x, z, ry] of [[-4, 0, Math.PI / 2], [4, 0, -Math.PI / 2], [0, -4, 0]] as [number, number, number][]) {
-			const wall = new Mesh(new PlaneGeometry(8, 4), wallMat);
+			const wall = new Mesh(new PlaneGeometry(8, 4), wallMat.clone());
 			wall.position.set(x, 2, z);
 			wall.rotation.y = ry;
 			scene.add(wall);
+			this.wallMeshes.push(wall);
 		}
 
 		// Grid lines on floor
@@ -656,6 +691,7 @@ class BlackjackGame extends createSystem({
 		gridGeo.setAttribute('position', new Float32BufferAttribute(gridVerts, 3));
 		const grid = new LineSegments(gridGeo, new LineBasicMaterial({ color: this.theme.accent, transparent: true, opacity: 0.06 }));
 		scene.add(grid);
+		this.gridLines = grid;
 
 		// Floating decorations
 		const decoGeo = new TorusGeometry(0.15, 0.02, 8, 16);
@@ -691,6 +727,7 @@ class BlackjackGame extends createSystem({
 		const felt = new Mesh(feltGeo, feltMat);
 		felt.position.set(0, TABLE_Y, TABLE_Z);
 		this.tableGroup.add(felt);
+		this.tableFelt = felt;
 
 		// Table edge
 		const edgeGeo = new TorusGeometry(0.7, 0.025, 8, 32);
@@ -700,6 +737,7 @@ class BlackjackGame extends createSystem({
 		edge.rotation.x = Math.PI / 2;
 		edge.position.set(0, TABLE_Y, TABLE_Z);
 		this.tableGroup.add(edge);
+		this.tableEdge = edge;
 
 		// Table legs
 		const legGeo = new CylinderGeometry(0.03, 0.04, TABLE_Y, 8);
@@ -1102,6 +1140,102 @@ class BlackjackGame extends createSystem({
 		glassGroup.add(glassBase);
 		scene.add(glassGroup);
 		this.casinoDecor.push(glassGroup);
+
+		// Decorative slot machine (right side)
+		const slotGroup = new Group();
+		const slotBody = new Mesh(
+			new BoxGeometry(0.25, 0.45, 0.2),
+			new MeshStandardMaterial({ color: 0x1a0033, roughness: 0.4, metalness: 0.3 })
+		);
+		slotBody.position.set(2.5, 0.45, -1.5);
+		slotGroup.add(slotBody);
+		// Slot top
+		const slotTop = new Mesh(
+			new BoxGeometry(0.27, 0.06, 0.22),
+			new MeshStandardMaterial({ color: this.theme.accent, emissive: this.theme.accent, emissiveIntensity: 0.3, metalness: 0.5 })
+		);
+		slotTop.position.set(2.5, 0.695, -1.5);
+		slotGroup.add(slotTop);
+		// Slot handle
+		const handlePole = new Mesh(
+			new CylinderGeometry(0.012, 0.012, 0.2, 6),
+			new MeshStandardMaterial({ color: 0xccaa00, metalness: 0.8, roughness: 0.2 })
+		);
+		handlePole.position.set(2.64, 0.55, -1.5);
+		slotGroup.add(handlePole);
+		const handleBall = new Mesh(
+			new SphereGeometry(0.025, 8, 8),
+			new MeshStandardMaterial({ color: 0xff3344, metalness: 0.3, roughness: 0.4 })
+		);
+		handleBall.position.set(2.64, 0.66, -1.5);
+		slotGroup.add(handleBall);
+		// Slot display windows
+		for (let w = 0; w < 3; w++) {
+			const win = new Mesh(
+				new PlaneGeometry(0.05, 0.08),
+				new MeshBasicMaterial({ color: 0x0a0a2a })
+			);
+			win.position.set(2.5 + (w - 1) * 0.06, 0.5, -1.395);
+			slotGroup.add(win);
+		}
+		// Slot glow strip
+		const slotGlow = new Mesh(
+			new BoxGeometry(0.23, 0.01, 0.005),
+			new MeshBasicMaterial({ color: this.theme.accent, transparent: true, opacity: 0.6, blending: AdditiveBlending })
+		);
+		slotGlow.position.set(2.5, 0.42, -1.395);
+		slotGroup.add(slotGlow);
+		scene.add(slotGroup);
+		this.casinoDecor.push(slotGroup);
+
+		// Decorative roulette wheel (left side)
+		const rouletteGroup = new Group();
+		// Base
+		const rBase = new Mesh(
+			new CylinderGeometry(0.2, 0.22, 0.05, 24),
+			new MeshStandardMaterial({ color: 0x220000, roughness: 0.5, metalness: 0.3 })
+		);
+		rBase.position.set(-2.5, 0.65, -1.5);
+		rouletteGroup.add(rBase);
+		// Wheel rim
+		const rRim = new Mesh(
+			new TorusGeometry(0.18, 0.015, 8, 24),
+			new MeshStandardMaterial({ color: 0xccaa00, metalness: 0.8, roughness: 0.2 })
+		);
+		rRim.position.set(-2.5, 0.68, -1.5);
+		rRim.rotation.x = Math.PI / 2;
+		rouletteGroup.add(rRim);
+		// Center spindle
+		const rCenter = new Mesh(
+			new CylinderGeometry(0.015, 0.015, 0.08, 8),
+			new MeshStandardMaterial({ color: 0xccaa00, metalness: 0.8, roughness: 0.2 })
+		);
+		rCenter.position.set(-2.5, 0.71, -1.5);
+		rouletteGroup.add(rCenter);
+		// Colored segments (alternating red/black wedges)
+		for (let s = 0; s < 12; s++) {
+			const angle = (s / 12) * Math.PI * 2;
+			const segColor = s % 2 === 0 ? 0xcc0000 : 0x111111;
+			const seg = new Mesh(
+				new BoxGeometry(0.03, 0.003, 0.14),
+				new MeshStandardMaterial({ color: segColor, roughness: 0.6 })
+			);
+			seg.position.set(
+				-2.5 + Math.cos(angle) * 0.08,
+				0.677,
+				-1.5 + Math.sin(angle) * 0.08
+			);
+			seg.rotation.y = angle;
+			rouletteGroup.add(seg);
+		}
+		// Roulette table legs
+		const rLegGeo = new CylinderGeometry(0.02, 0.025, 0.63, 6);
+		const rLegMat = new MeshStandardMaterial({ color: 0x332200, roughness: 0.6 });
+		const rLeg = new Mesh(rLegGeo, rLegMat);
+		rLeg.position.set(-2.5, 0.32, -1.5);
+		rouletteGroup.add(rLeg);
+		scene.add(rouletteGroup);
+		this.casinoDecor.push(rouletteGroup);
 	}
 
 	// ===== DEALER COMMENTARY =====
@@ -1344,17 +1478,63 @@ class BlackjackGame extends createSystem({
 	}
 
 	private flipCard(card: Card) {
-		if (card.mesh) {
-			this.cardGroup.remove(card.mesh);
-			card.mesh = undefined;
-		}
-		card.faceUp = true;
-		const mesh = this.createCardMesh(card, true);
+		const oldMesh = card.mesh;
+		if (!oldMesh) return;
 
-		// Position at the dealer's row
+		// Create the face-up mesh off-screen
+		card.faceUp = true;
+		const newMesh = this.createCardMesh(card, true);
+
+		// Position at the same spot
 		const idx = this.dealerCards.indexOf(card);
 		const totalW = (this.dealerCards.length - 1) * CARD_SPACING;
-		mesh.position.set(-totalW / 2 + idx * CARD_SPACING, DEALER_Y, DEALER_Z);
+		const x = -totalW / 2 + idx * CARD_SPACING;
+		newMesh.position.set(x, DEALER_Y, DEALER_Z);
+		newMesh.scale.x = 0; // Start invisible from the side
+		newMesh.visible = true;
+
+		this.flippingCards.push({
+			card,
+			mesh: oldMesh,
+			newMesh,
+			timer: 0,
+			duration: 0.35,
+			idx,
+		});
+	}
+
+	private updateCardFlips(dt: number) {
+		for (let i = this.flippingCards.length - 1; i >= 0; i--) {
+			const f = this.flippingCards[i];
+			f.timer += dt;
+			const t = Math.min(1, f.timer / f.duration);
+
+			if (t < 0.5) {
+				// First half: shrink old card along X
+				const phase = t * 2; // 0 -> 1
+				f.mesh.scale.x = 1 - phase;
+				f.mesh.rotation.y = phase * Math.PI * 0.5;
+			} else {
+				// Second half: expand new card
+				if (f.mesh.visible) {
+					f.mesh.visible = false;
+					this.cardGroup.remove(f.mesh);
+					// Remove from cardMeshes
+					const cmIdx = this.cardMeshes.indexOf(f.mesh);
+					if (cmIdx >= 0) this.cardMeshes.splice(cmIdx, 1);
+				}
+				const phase = (t - 0.5) * 2; // 0 -> 1
+				f.newMesh.scale.x = phase;
+				f.newMesh.rotation.y = (1 - phase) * Math.PI * 0.5;
+			}
+
+			if (t >= 1) {
+				f.newMesh.scale.x = 1;
+				f.newMesh.rotation.y = 0;
+				this.audio.playDeal();
+				this.flippingCards.splice(i, 1);
+			}
+		}
 	}
 
 	private clearCards() {
@@ -1538,6 +1718,16 @@ class BlackjackGame extends createSystem({
 				btn('btn-theme-next', () => this.cycleTheme(1));
 				btn('btn-strategy-toggle', () => { this.showStrategy = !this.showStrategy; this.refreshSettings(); });
 				btn('btn-sidebets-toggle', () => { this.sideBetsEnabled = !this.sideBetsEnabled; this.refreshSettings(); });
+				btn('btn-autoplay-toggle', () => { this.autoPlay = !this.autoPlay; this.autoPlayDelay = 0.5; this.refreshSettings(); });
+				btn('btn-spend-comps', () => {
+					if (this.spendComps(50)) {
+						this.bank += 1000;
+						this.showToast('Comps redeemed: +$1,000!');
+						this.refreshSettings();
+					} else {
+						this.showToast('Need 50 comps to redeem');
+					}
+				});
 				btn('btn-settings-back', () => { this.saveAllData(); this.setState('title'); });
 				break;
 
@@ -1717,6 +1907,8 @@ class BlackjackGame extends createSystem({
 		this.updateStreakEffects(dt, time);
 		this.updateJackpotDisplay(time);
 		this.updateShoeIndicator();
+		this.updateCardFlips(dt);
+		this.handleAutoPlay(dt);
 		if (this.dealerCommentaryCooldown > 0) this.dealerCommentaryCooldown -= dt;
 
 		for (let i = this.animatingCards.length - 1; i >= 0; i--) {
@@ -2358,6 +2550,7 @@ class BlackjackGame extends createSystem({
 			this.updateLeaderboard();
 		}
 
+		this.earnComps(result);
 		this.checkAchievements();
 		this.saveAllData();
 		this.addToHistory(
@@ -2501,6 +2694,11 @@ class BlackjackGame extends createSystem({
 		} else {
 			this.setText('hud', 'jackpot-display', '');
 		}
+
+		// Auto-play indicator
+		if (this.autoPlay) {
+			this.setText('hud', 'hud-streak', `AUTO | Streak: ${this.winStreak}`);
+		}
 	}
 
 	private refreshCounting() {
@@ -2563,6 +2761,7 @@ class BlackjackGame extends createSystem({
 		this.setText('stats', 'stat-doubles', `Doubles Won: ${c.doublesWon}`);
 		this.setText('stats', 'stat-splits', `Splits Won: ${c.splitsWon}`);
 		this.setText('stats', 'stat-surrenders', `Surrenders: ${c.surrenders}`);
+		this.setText('stats', 'stat-comps', `Comp Points: ${this.compPoints} (${this.getCompTier()})`);
 	}
 
 	private refreshSkins() {
@@ -2582,6 +2781,8 @@ class BlackjackGame extends createSystem({
 		this.setText('settings', 'theme-val', this.theme.name);
 		this.setText('settings', 'strategy-val', this.showStrategy ? 'ON' : 'OFF');
 		this.setText('settings', 'sidebets-val', this.sideBetsEnabled ? 'ON' : 'OFF');
+		this.setText('settings', 'autoplay-val', this.autoPlay ? 'ON' : 'OFF');
+		this.setText('settings', 'comps-val', `${this.compPoints} pts (${this.getCompTier()})`);
 	}
 
 	// ===== SETTINGS =====
@@ -2603,7 +2804,72 @@ class BlackjackGame extends createSystem({
 		if (!this.career.themesUsed.includes(this.themeIdx)) {
 			this.career.themesUsed.push(this.themeIdx);
 		}
+		this.applyTheme();
 		this.refreshSettings();
+	}
+
+	private applyTheme() {
+		const t = this.theme;
+		const scene = this.world.scene;
+
+		// Scene
+		if (scene.fog instanceof FogExp2) (scene.fog as FogExp2).color.set(t.fog);
+		(scene.background as Color)?.set(t.bg);
+
+		// Floor
+		if (this.floorMesh) (this.floorMesh.material as MeshStandardMaterial).color.set(t.bg);
+
+		// Walls
+		for (const w of this.wallMeshes) (w.material as MeshStandardMaterial).color.set(t.wall);
+
+		// Grid lines
+		if (this.gridLines) (this.gridLines.material as LineBasicMaterial).color.set(t.accent);
+
+		// Lights
+		if (this.keyLight) this.keyLight.color.set(t.accent);
+		for (const al of this.accentLights) al.color.set(t.accent);
+
+		// Table
+		if (this.tableFelt) (this.tableFelt.material as MeshStandardMaterial).color.set(t.felt);
+		if (this.tableEdge) {
+			const em = this.tableEdge.material as MeshStandardMaterial;
+			em.color.set(t.accent);
+			em.emissive.set(t.accent);
+		}
+
+		// Floating decorations
+		for (const d of this.decorations) {
+			const dm = d.mesh.material as MeshStandardMaterial;
+			dm.color.set(t.accent);
+			dm.emissive.set(t.accent);
+		}
+
+		// Ambient particles
+		for (const ap of this.ambientParticles) {
+			(ap.mesh.material as MeshBasicMaterial).color.set(t.accent);
+		}
+
+		// Neon signs
+		for (const sign of this.neonSigns) {
+			const children = sign.group.children || [];
+			for (const child of children) {
+				if (child instanceof Mesh && child.material) {
+					(child.material as MeshBasicMaterial).color.set(t.accent);
+				}
+			}
+			if (sign.group instanceof Mesh && (sign.group as Mesh).material) {
+				((sign.group as Mesh).material as MeshBasicMaterial).color.set(t.accent);
+			}
+		}
+
+		// Dealer eyes + collar
+		if (this.dealerGroup) {
+			for (const child of this.dealerGroup.children) {
+				if (child instanceof Mesh && child.material instanceof MeshBasicMaterial) {
+					child.material.color.set(t.accent);
+				}
+			}
+		}
 	}
 
 	private selectSkin(idx: number) {
@@ -2726,6 +2992,81 @@ class BlackjackGame extends createSystem({
 
 		this.sideBetPP = 0;
 		this.sideBet213 = 0;
+	}
+
+	// ===== COMP POINTS SYSTEM =====
+	private earnComps(result: string) {
+		let earned = 1; // Base comp per hand
+		if (result === 'blackjack') earned = 5;
+		else if (result === 'win') earned = 2;
+		if (this.mode === 'highstakes') earned *= 2;
+		if (this.mode === 'tournament') earned *= 3;
+		this.compPoints += earned;
+		this.totalCompsEarned += earned;
+		// Level up comp tier
+		const newLevel = Math.floor(this.totalCompsEarned / 100);
+		if (newLevel > this.compLevel) {
+			this.compLevel = newLevel;
+			const tierNames = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'VIP', 'Elite VIP'];
+			const tierName = tierNames[Math.min(this.compLevel, tierNames.length - 1)];
+			this.showToast(`Comp Tier: ${tierName}!`);
+			// Award bonus chips at tier-up
+			const bonus = this.compLevel * 500;
+			this.bank += bonus;
+			this.showToast(`Tier bonus: +$${bonus.toLocaleString()}`);
+		}
+	}
+
+	private getCompTier(): string {
+		const tierNames = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'VIP', 'Elite VIP'];
+		return tierNames[Math.min(this.compLevel, tierNames.length - 1)];
+	}
+
+	private spendComps(amount: number): boolean {
+		if (this.compPoints < amount) return false;
+		this.compPoints -= amount;
+		return true;
+	}
+
+	// ===== AUTO-PLAY =====
+	private handleAutoPlay(dt: number) {
+		if (!this.autoPlay) return;
+		this.autoPlayDelay -= dt;
+		if (this.autoPlayDelay > 0) return;
+
+		if (this.state === 'betting') {
+			this.currentBet = Math.min(this.lastBet, this.bank);
+			if (this.currentBet > 0) {
+				this.autoPlayDelay = 0.5;
+				this.dealHand();
+			} else {
+				this.autoPlay = false; // Stop if bankrupt
+			}
+		} else if (this.state === 'playerTurn') {
+			// Use basic strategy for auto-play decisions
+			const advice = this.getStrategyAdvice();
+			this.autoPlayDelay = 0.6;
+			if (advice.startsWith('DOUBLE') && this.activeHand && this.activeHand.cards.length === 2 && this.activeHand.bet <= this.bank) {
+				this.playerDouble();
+			} else if (advice.startsWith('SPLIT') && this.activeHand && canSplit(this.activeHand) && this.activeHand.bet <= this.bank) {
+				this.playerSplit();
+			} else if (advice.startsWith('HIT')) {
+				this.playerHit();
+			} else {
+				this.playerStand();
+			}
+		} else if (this.state === 'gameover') {
+			this.autoPlayDelay = 1.0;
+			if (this.bank <= 0) {
+				this.autoPlay = false;
+			} else if (this.mode === 'survival' && this.survivalLives <= 0) {
+				this.autoPlay = false;
+			} else if (this.mode === 'tournament' && this.tournamentRound >= this.tournamentMaxRounds) {
+				this.autoPlay = false;
+			} else {
+				this.rebet();
+			}
+		}
 	}
 
 	// ===== BASIC STRATEGY ADVISOR =====
@@ -2954,6 +3295,24 @@ class BlackjackGame extends createSystem({
 			{ id: 'session_10k', name: 'Session King', desc: 'Earn $10,000 in one session', check: () => this.sessionEarnings >= 10000 },
 			{ id: 'bust_50', name: 'Living Dangerously', desc: 'Bust 50 times total', check: () => c.bustCount >= 50 },
 			{ id: 'insurance_5', name: 'Risk Manager', desc: 'Win insurance 5 times', check: () => c.insuranceWins >= 5 },
+			// Round 6 additions - Comp achievements
+			{ id: 'comp_10', name: 'Loyalty Member', desc: 'Earn 10 comp points', check: () => this.totalCompsEarned >= 10 },
+			{ id: 'comp_50', name: 'Frequent Player', desc: 'Earn 50 comp points', check: () => this.totalCompsEarned >= 50 },
+			{ id: 'comp_100', name: 'Silver Tier', desc: 'Reach Silver comp tier', check: () => this.compLevel >= 1 },
+			{ id: 'comp_200', name: 'Gold Status', desc: 'Reach Gold comp tier', check: () => this.compLevel >= 2 },
+			{ id: 'comp_300', name: 'Platinum Elite', desc: 'Reach Platinum comp tier', check: () => this.compLevel >= 3 },
+			{ id: 'comp_500', name: 'Diamond Member', desc: 'Reach Diamond comp tier', check: () => this.compLevel >= 4 },
+			// Theme mastery
+			{ id: 'crimson_50', name: 'Crimson Regular', desc: 'Play 50 hands in Crimson Casino', check: () => this.themeIdx === 1 && this.handsPlayed >= 50 },
+			{ id: 'golden_50', name: 'Golden Player', desc: 'Play 50 hands in Golden Royale', check: () => this.themeIdx === 2 && this.handsPlayed >= 50 },
+			// Bank milestones
+			{ id: 'bank_200k', name: 'Quarter Million', desc: 'Have $200,000+ in bank', check: () => this.bank >= 200000 },
+			{ id: 'bank_500k', name: 'Half Million', desc: 'Have $500,000+ in bank', check: () => this.bank >= 500000 },
+			{ id: 'bank_1m', name: 'Millionaire', desc: 'Have $1,000,000+ in bank', check: () => this.bank >= 1000000 },
+			// Streak mastery
+			{ id: 'streak_30', name: 'Untouchable', desc: 'Win 30 in a row', check: () => c.bestStreak >= 30 },
+			// Auto-play
+			{ id: 'autoplay_use', name: 'Robot Player', desc: 'Use auto-play mode', check: () => this.autoPlay },
 		];
 	}
 

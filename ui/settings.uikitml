@@ -41,6 +41,16 @@
       <text name="btn-sidebets-toggle" fontSize="10" color="#ff00ff" backgroundColor="#112233" padding="3" paddingLeft="12" paddingRight="12" borderRadius="3" borderColor="#ff00ff" borderWidth="1" cursor="pointer">Toggle</text>
       <text name="sidebets-val" fontSize="10" color="#00e5ff" width="30" textAlign="center">ON</text>
     </container>
+    <container flexDirection="row" gap="6" alignItems="center">
+      <text fontSize="10" color="#aaaaaa" width="80">Auto-Play</text>
+      <text name="btn-autoplay-toggle" fontSize="10" color="#ffaa00" backgroundColor="#112233" padding="3" paddingLeft="12" paddingRight="12" borderRadius="3" borderColor="#ffaa00" borderWidth="1" cursor="pointer">Toggle</text>
+      <text name="autoplay-val" fontSize="10" color="#00e5ff" width="30" textAlign="center">OFF</text>
+    </container>
+    <container flexDirection="row" gap="6" alignItems="center">
+      <text fontSize="10" color="#aaaaaa" width="80">Comps</text>
+      <text name="btn-spend-comps" fontSize="10" color="#00ff88" backgroundColor="#112233" padding="3" paddingLeft="8" paddingRight="8" borderRadius="3" borderColor="#00ff88" borderWidth="1" cursor="pointer">Redeem 50</text>
+      <text name="comps-val" fontSize="10" color="#ffaa00" width="100" textAlign="center">0 pts</text>
+    </container>
   </container>
   <text name="btn-settings-back" fontSize="12" color="#666666" backgroundColor="#001a33" padding="5" paddingLeft="20" paddingRight="20" borderRadius="4" borderColor="#666666" borderWidth="1" cursor="pointer" marginTop="6">BACK</text>
 </container>

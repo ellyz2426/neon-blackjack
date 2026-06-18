@@ -1,0 +1,16 @@
+{
+  "game": "neon-blackjack",
+  "build_number": 55,
+  "date": "2026-06-18",
+  "cycle": "AM",
+  "status": "complete",
+  "rounds": 6,
+  "total_build_minutes": 226,
+  "total_loc": 3355,
+  "panels": 21,
+  "achievements": 111,
+  "game_modes": 10,
+  "commits": 7,
+  "pages_url": "https://ellyz2426.github.io/neon-blackjack/",
+  "repo_url": "https://github.com/ellyz2426/neon-blackjack"
+}

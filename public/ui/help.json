@@ -1,0 +1,485 @@
+{
+  "element": {
+    "sourceTag": "container",
+    "type": "custom",
+    "children": [
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "HOW TO PLAY"
+        ],
+        "properties": {
+          "fontsize": "18",
+          "fontweight": "bold",
+          "color": "#aaaaaa"
+        },
+        "dataUid": "uid-2"
+      },
+      {
+        "sourceTag": "container",
+        "type": "custom",
+        "children": [
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Goal: Beat the dealer without going over 21"
+            ],
+            "properties": {
+              "fontsize": "10",
+              "color": "#00e5ff"
+            },
+            "dataUid": "uid-4"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Number cards = face value"
+            ],
+            "properties": {
+              "fontsize": "10",
+              "color": "#aaaaaa"
+            },
+            "dataUid": "uid-5"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Face cards (J,Q,K) = 10"
+            ],
+            "properties": {
+              "fontsize": "10",
+              "color": "#aaaaaa"
+            },
+            "dataUid": "uid-6"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Ace = 1 or 11"
+            ],
+            "properties": {
+              "fontsize": "10",
+              "color": "#aaaaaa"
+            },
+            "dataUid": "uid-7"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "HIT - Draw another card"
+            ],
+            "properties": {
+              "fontsize": "10",
+              "color": "#ffaa00"
+            },
+            "dataUid": "uid-8"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "STAND - Keep your hand"
+            ],
+            "properties": {
+              "fontsize": "10",
+              "color": "#ffaa00"
+            },
+            "dataUid": "uid-9"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "DOUBLE - Double bet, one card"
+            ],
+            "properties": {
+              "fontsize": "10",
+              "color": "#ff00ff"
+            },
+            "dataUid": "uid-10"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "SPLIT - Split matching cards"
+            ],
+            "properties": {
+              "fontsize": "10",
+              "color": "#8888ff"
+            },
+            "dataUid": "uid-11"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "INSURANCE - Side bet vs dealer ace"
+            ],
+            "properties": {
+              "fontsize": "10",
+              "color": "#ffcc00"
+            },
+            "dataUid": "uid-12"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Blackjack pays 3:2"
+            ],
+            "properties": {
+              "fontsize": "10",
+              "color": "#00ff88"
+            },
+            "dataUid": "uid-13"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Insurance pays 2:1"
+            ],
+            "properties": {
+              "fontsize": "10",
+              "color": "#00ff88"
+            },
+            "dataUid": "uid-14"
+          }
+        ],
+        "properties": {
+          "flexdirection": "column",
+          "gap": "2",
+          "margintop": "4"
+        },
+        "dataUid": "uid-3"
+      },
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "CONTROLS"
+        ],
+        "properties": {
+          "fontsize": "12",
+          "fontweight": "bold",
+          "color": "#00e5ff",
+          "margintop": "4"
+        },
+        "dataUid": "uid-15"
+      },
+      {
+        "sourceTag": "container",
+        "type": "custom",
+        "children": [
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "Click / VR Trigger - Select"
+            ],
+            "properties": {
+              "fontsize": "9",
+              "color": "#aaaaaa"
+            },
+            "dataUid": "uid-17"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "H - Hit, S - Stand"
+            ],
+            "properties": {
+              "fontsize": "9",
+              "color": "#aaaaaa"
+            },
+            "dataUid": "uid-18"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "D - Double, P - Split"
+            ],
+            "properties": {
+              "fontsize": "9",
+              "color": "#aaaaaa"
+            },
+            "dataUid": "uid-19"
+          },
+          {
+            "sourceTag": "text",
+            "type": "custom",
+            "children": [
+              "ESC - Pause"
+            ],
+            "properties": {
+              "fontsize": "9",
+              "color": "#aaaaaa"
+            },
+            "dataUid": "uid-20"
+          }
+        ],
+        "properties": {
+          "flexdirection": "column",
+          "gap": "2",
+          "margintop": "2"
+        },
+        "dataUid": "uid-16"
+      },
+      {
+        "sourceTag": "text",
+        "type": "custom",
+        "children": [
+          "BACK"
+        ],
+        "properties": {
+          "name": "btn-help-back",
+          "fontsize": "12",
+          "color": "#666666",
+          "backgroundcolor": "#001a33",
+          "padding": "5",
+          "paddingleft": "20",
+          "paddingright": "20",
+          "borderradius": "4",
+          "bordercolor": "#666666",
+          "borderwidth": "1",
+          "cursor": "pointer",
+          "margintop": "4"
+        },
+        "dataUid": "uid-21"
+      }
+    ],
+    "properties": {
+      "flexdirection": "column",
+      "alignitems": "center",
+      "gap": "3",
+      "padding": "12",
+      "backgroundcolor": "#000a18",
+      "borderradius": "8",
+      "bordercolor": "#aaaaaa",
+      "borderwidth": "1"
+    },
+    "dataUid": "uid-1"
+  },
+  "classes": {},
+  "ranges": {
+    "uid-1": {
+      "start": {
+        "line": 0,
+        "column": 0
+      },
+      "end": {
+        "line": 23,
+        "column": 12
+      }
+    },
+    "uid-2": {
+      "start": {
+        "line": 1,
+        "column": 2
+      },
+      "end": {
+        "line": 1,
+        "column": 74
+      }
+    },
+    "uid-3": {
+      "start": {
+        "line": 2,
+        "column": 2
+      },
+      "end": {
+        "line": 14,
+        "column": 14
+      }
+    },
+    "uid-4": {
+      "start": {
+        "line": 3,
+        "column": 4
+      },
+      "end": {
+        "line": 3,
+        "column": 90
+      }
+    },
+    "uid-5": {
+      "start": {
+        "line": 4,
+        "column": 4
+      },
+      "end": {
+        "line": 4,
+        "column": 72
+      }
+    },
+    "uid-6": {
+      "start": {
+        "line": 5,
+        "column": 4
+      },
+      "end": {
+        "line": 5,
+        "column": 70
+      }
+    },
+    "uid-7": {
+      "start": {
+        "line": 6,
+        "column": 4
+      },
+      "end": {
+        "line": 6,
+        "column": 60
+      }
+    },
+    "uid-8": {
+      "start": {
+        "line": 7,
+        "column": 4
+      },
+      "end": {
+        "line": 7,
+        "column": 70
+      }
+    },
+    "uid-9": {
+      "start": {
+        "line": 8,
+        "column": 4
+      },
+      "end": {
+        "line": 8,
+        "column": 69
+      }
+    },
+    "uid-10": {
+      "start": {
+        "line": 9,
+        "column": 4
+      },
+      "end": {
+        "line": 9,
+        "column": 76
+      }
+    },
+    "uid-11": {
+      "start": {
+        "line": 10,
+        "column": 4
+      },
+      "end": {
+        "line": 10,
+        "column": 75
+      }
+    },
+    "uid-12": {
+      "start": {
+        "line": 11,
+        "column": 4
+      },
+      "end": {
+        "line": 11,
+        "column": 81
+      }
+    },
+    "uid-13": {
+      "start": {
+        "line": 12,
+        "column": 4
+      },
+      "end": {
+        "line": 12,
+        "column": 65
+      }
+    },
+    "uid-14": {
+      "start": {
+        "line": 13,
+        "column": 4
+      },
+      "end": {
+        "line": 13,
+        "column": 65
+      }
+    },
+    "uid-15": {
+      "start": {
+        "line": 15,
+        "column": 2
+      },
+      "end": {
+        "line": 15,
+        "column": 85
+      }
+    },
+    "uid-16": {
+      "start": {
+        "line": 16,
+        "column": 2
+      },
+      "end": {
+        "line": 21,
+        "column": 14
+      }
+    },
+    "uid-17": {
+      "start": {
+        "line": 17,
+        "column": 4
+      },
+      "end": {
+        "line": 17,
+        "column": 73
+      }
+    },
+    "uid-18": {
+      "start": {
+        "line": 18,
+        "column": 4
+      },
+      "end": {
+        "line": 18,
+        "column": 64
+      }
+    },
+    "uid-19": {
+      "start": {
+        "line": 19,
+        "column": 4
+      },
+      "end": {
+        "line": 19,
+        "column": 67
+      }
+    },
+    "uid-20": {
+      "start": {
+        "line": 20,
+        "column": 4
+      },
+      "end": {
+        "line": 20,
+        "column": 57
+      }
+    },
+    "uid-21": {
+      "start": {
+        "line": 22,
+        "column": 2
+      },
+      "end": {
+        "line": 22,
+        "column": 229
+      }
+    }
+  }
+}

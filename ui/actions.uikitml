@@ -8,6 +8,10 @@
     <text name="btn-double" fontSize="11" color="#ff00ff" backgroundColor="#1a0011" padding="5" paddingLeft="12" paddingRight="12" borderRadius="4" borderColor="#ff00ff" borderWidth="1" cursor="pointer">DOUBLE</text>
     <text name="btn-split" fontSize="11" color="#8888ff" backgroundColor="#0a0a1a" padding="5" paddingLeft="12" paddingRight="12" borderRadius="4" borderColor="#8888ff" borderWidth="1" cursor="pointer">SPLIT</text>
   </container>
-  <text name="btn-insurance" fontSize="10" color="#ffcc00" backgroundColor="#1a1100" padding="4" paddingLeft="12" paddingRight="12" borderRadius="4" borderColor="#ffcc00" borderWidth="1" cursor="pointer">INSURANCE</text>
+  <container flexDirection="row" gap="4">
+    <text name="btn-insurance" fontSize="10" color="#ffcc00" backgroundColor="#1a1100" padding="4" paddingLeft="12" paddingRight="12" borderRadius="4" borderColor="#ffcc00" borderWidth="1" cursor="pointer">INSURANCE</text>
+    <text name="btn-surrender" fontSize="10" color="#ff6666" backgroundColor="#1a0505" padding="4" paddingLeft="12" paddingRight="12" borderRadius="4" borderColor="#ff6666" borderWidth="1" cursor="pointer">SURRENDER</text>
+  </container>
   <text name="timer-display" fontSize="10" color="#ff4444"></text>
+  <text name="hand-indicator" fontSize="9" color="#666666"></text>
 </container>

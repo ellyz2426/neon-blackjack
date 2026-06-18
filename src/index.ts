@@ -439,6 +439,16 @@ class BlackjackGame extends createSystem({
 		biggestWin: 0, doublesWon: 0, splitsWon: 0, surrenders: 0,
 		totalEarnings: 0, bestStreak: 0, level: 1, xp: 0,
 		dailyDone: 0, lastDaily: '',
+		modesPlayed: [] as string[],
+		speedHands: 0, countingHands: 0, highstakesWins: 0,
+		practiceHands: 0, survivalBest: 0,
+		bustCount: 0, insuranceWins: 0,
+		cameBackFromLow: false, playedVR: false,
+		noBustStreak: 0, bestNoBust: 0,
+		themesUsed: [0] as number[],
+		skinsSelected: [0] as number[],
+		allInCount: 0, minBetWins: 0,
+		splitAcesCount: 0, maxSplitHands: 0,
 	};
 	private leaderboard: LeaderboardEntry[] = [];
 	private achievementsUnlocked: Set<string> = new Set();
@@ -446,6 +456,12 @@ class BlackjackGame extends createSystem({
 
 	// XR stick cooldown
 	private xrStickCooldown = 0;
+
+	// Active hand indicator
+	private handIndicator!: Mesh;
+
+	// XR mode tracking
+	private isInXR = false;
 
 	// Card dealing animation
 	private animatingCards: { card: Card; mesh: Group; startPos: Vector3; endPos: Vector3; timer: number; duration: number; onDone: () => void }[] = [];
@@ -463,6 +479,7 @@ class BlackjackGame extends createSystem({
 		this.createTable();
 		this.cardGroup = new Group();
 		this.world.scene.add(this.cardGroup);
+		this.createHandIndicator();
 		this.createPanels();
 		this.setupInput();
 		this.setState('title');
@@ -611,6 +628,104 @@ class BlackjackGame extends createSystem({
 		this.world.scene.add(this.tableGroup);
 	}
 
+	// ===== HAND INDICATOR =====
+	private createHandIndicator() {
+		const geo = new RingGeometry(0.06, 0.075, 24);
+		const mat = new MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0.6, side: DoubleSide });
+		this.handIndicator = new Mesh(geo, mat);
+		this.handIndicator.rotation.x = -Math.PI / 2;
+		this.handIndicator.visible = false;
+		this.world.scene.add(this.handIndicator);
+	}
+
+	private updateHandIndicator() {
+		if (this.state !== 'playerTurn' || this.playerHands.length <= 1) {
+			this.handIndicator.visible = false;
+			return;
+		}
+		this.handIndicator.visible = true;
+		const xOffset = this.activeHandIdx * 0.4 - (this.playerHands.length - 1) * 0.2;
+		this.handIndicator.position.set(xOffset, PLAYER_Y + 0.005, PLAYER_Z + 0.12);
+		// Pulse
+		const pulse = 0.4 + 0.3 * Math.sin(performance.now() / 300);
+		(this.handIndicator.material as MeshBasicMaterial).opacity = pulse;
+	}
+
+	// ===== XR CONTROLLER INPUT =====
+	private handleXRInput() {
+		const input = this.world.input;
+		if (!input) return;
+
+		const rightGP = input.gamepads.right;
+		const leftGP = input.gamepads.left;
+		if (!rightGP && !leftGP) return;
+
+		// Read buttons from right controller
+		const rightTrigger = rightGP?.getButtonValue(InputComponent.Trigger) ?? 0;
+		const leftTrigger = leftGP?.getButtonValue(InputComponent.Trigger) ?? 0;
+		const aButton = rightGP?.getButtonValue(InputComponent.A_Button) ?? 0;
+		const bButton = rightGP?.getButtonValue(InputComponent.B_Button) ?? 0;
+		const rightStick = rightGP?.getAxesValues(InputComponent.Thumbstick);
+
+		if (this.xrStickCooldown > 0) return;
+
+		// Track VR session
+		if (!this.career.playedVR) {
+			this.career.playedVR = true;
+			this.isInXR = true;
+			this.saveAllData();
+		}
+
+		if (this.state === 'playerTurn') {
+			if (rightTrigger > 0.5) {
+				this.playerHit();
+				this.xrStickCooldown = 0.3;
+			} else if (leftTrigger > 0.5) {
+				this.playerStand();
+				this.xrStickCooldown = 0.3;
+			} else if (aButton > 0.5) {
+				this.playerDouble();
+				this.xrStickCooldown = 0.3;
+			} else if (bButton > 0.5) {
+				this.playerSplit();
+				this.xrStickCooldown = 0.3;
+			}
+		} else if (this.state === 'betting') {
+			// Thumbstick up/down to adjust bet
+			if (rightStick && rightStick.y > 0.5) {
+				this.addBet(100);
+				this.xrStickCooldown = 0.2;
+			} else if (rightStick && rightStick.y < -0.5) {
+				this.currentBet = Math.max(0, this.currentBet - 100);
+				this.refreshBetting();
+				this.xrStickCooldown = 0.2;
+			}
+			// Right trigger to deal
+			if (rightTrigger > 0.5) {
+				this.dealHand();
+				this.xrStickCooldown = 0.5;
+			}
+		} else if (this.state === 'gameover') {
+			if (rightTrigger > 0.5 || aButton > 0.5) {
+				this.rebet();
+				this.xrStickCooldown = 0.5;
+			} else if (bButton > 0.5) {
+				this.clearCards();
+				this.setState('title');
+				this.xrStickCooldown = 0.5;
+			}
+		} else if (this.state === 'paused') {
+			if (aButton > 0.5) {
+				this.setState(this.prevState);
+				this.xrStickCooldown = 0.3;
+			} else if (bButton > 0.5) {
+				this.clearCards();
+				this.setState('title');
+				this.xrStickCooldown = 0.3;
+			}
+		}
+	}
+
 	// ===== CARD VISUALS =====
 	private createCardMesh(card: Card, faceUp: boolean): Group {
 		const group = new Group();
@@ -622,7 +737,7 @@ class BlackjackGame extends createSystem({
 		group.add(body);
 
 		if (faceUp) {
-			// Face side — white base
+			// Face side - white base
 			const faceGeo = new PlaneGeometry(CARD_W - 0.008, CARD_H - 0.008);
 			const faceMat = new MeshBasicMaterial({ color: 0x0a0a1a, side: DoubleSide });
 			const face = new Mesh(faceGeo, faceMat);
@@ -645,7 +760,7 @@ class BlackjackGame extends createSystem({
 			suitLabel.position.set(-CARD_W / 2 + 0.022, CARD_H / 2 - 0.065, CARD_D / 2 + 0.002);
 			group.add(suitLabel);
 
-			// Center pip — large suit symbol
+			// Center pip - large suit symbol
 			const centerPip = this.createSuitMesh(card.suit, 0.035);
 			centerPip.position.set(0, 0, CARD_D / 2 + 0.002);
 			group.add(centerPip);
@@ -842,6 +957,7 @@ class BlackjackGame extends createSystem({
 				btn('btn-double', () => this.playerDouble());
 				btn('btn-split', () => this.playerSplit());
 				btn('btn-insurance', () => this.playerInsurance());
+				btn('btn-surrender', () => this.playerSurrender());
 				break;
 
 			case 'gameover':
@@ -981,6 +1097,8 @@ class BlackjackGame extends createSystem({
 		const dt = Math.min(delta, 0.05);
 
 		this.particles.update(dt);
+		this.handleXRInput();
+		this.updateHandIndicator();
 
 		const time = performance.now() / 1000;
 		for (const d of this.decorations) {
@@ -1058,6 +1176,12 @@ class BlackjackGame extends createSystem({
 	// ===== GAME MODES =====
 	private startMode(mode: GameMode) {
 		this.mode = mode;
+
+		// Track mode played
+		if (!this.career.modesPlayed.includes(mode)) {
+			this.career.modesPlayed.push(mode);
+			this.saveAllData();
+		}
 
 		if (mode === 'highstakes') {
 			this.currentBet = 500;
@@ -1284,6 +1408,7 @@ class BlackjackGame extends createSystem({
 		const splitCard = hand.cards.pop()!;
 		const splitAces = hand.cards[0].rank === 'A';
 		hand.splitAces = splitAces;
+		if (splitAces) this.career.splitAcesCount++;
 
 		const newHand: Hand = {
 			cards: [splitCard],
@@ -1327,6 +1452,35 @@ class BlackjackGame extends createSystem({
 		this.showToast(`Insurance: ${insAmount}`);
 	}
 
+	private playerSurrender() {
+		if (this.state !== 'playerTurn') return;
+		const hand = this.activeHand;
+		if (!hand || hand.cards.length !== 2) return;
+		if (this.playerHands.length > 1) return; // Can't surrender split hands
+
+		hand.surrendered = true;
+		hand.stood = true;
+		const refund = Math.floor(hand.bet / 2);
+		this.bank += refund;
+		this.career.surrenders++;
+		this.career.hands++;
+		this.handsPlayed++;
+		this.winStreak = 0;
+		this.career.xp += 5;
+		this.checkAchievements();
+		this.saveAllData();
+
+		this.audio.playLose();
+		this.setText('gameover', 'result-title', 'SURRENDERED');
+		this.setText('gameover', 'result-payout', `-${hand.bet - refund}`);
+		this.setText('gameover', 'result-player', `Your Hand: ${handValue(hand.cards)}`);
+		this.setText('gameover', 'result-dealer', `Dealer: ?`);
+		this.setText('gameover', 'result-bank', `Bank: ${this.bank.toLocaleString()}`);
+		this.setText('gameover', 'result-streak', `Win Streak: 0`);
+		this.setText('gameover', 'result-hands', `Hands Played: ${this.handsPlayed}`);
+		this.setState('gameover');
+	}
+
 	private advanceHand() {
 		for (let i = this.activeHandIdx + 1; i < this.playerHands.length; i++) {
 			if (!this.playerHands[i].stood && !this.playerHands[i].busted) {
@@ -1351,6 +1505,7 @@ class BlackjackGame extends createSystem({
 			if (isBlackjack(this.dealerCards)) {
 				const payout = this.insuranceBet * 3;
 				this.bank += payout;
+				this.career.insuranceWins++;
 				this.showToast(`Insurance pays ${payout}!`);
 			} else {
 				this.showToast('Insurance lost');
@@ -1464,6 +1619,46 @@ class BlackjackGame extends createSystem({
 			this.showToast(`Level Up! Lv.${newLevel} - ${LEVEL_TITLES[Math.min(newLevel - 1, LEVEL_TITLES.length - 1)]}`);
 		}
 
+		// Mode-specific tracking
+		if (this.mode === 'speed') this.career.speedHands++;
+		if (this.mode === 'counting') this.career.countingHands++;
+		if (this.mode === 'practice') this.career.practiceHands++;
+		if (this.mode === 'highstakes' && (result === 'win' || result === 'blackjack')) this.career.highstakesWins++;
+
+		// Bust tracking
+		if (hand.busted) {
+			this.career.bustCount++;
+			this.career.noBustStreak = 0;
+		} else {
+			this.career.noBustStreak++;
+			if (this.career.noBustStreak > this.career.bestNoBust) {
+				this.career.bestNoBust = this.career.noBustStreak;
+			}
+		}
+
+		// Comeback tracking
+		if (this.bank < 1000 && (result === 'win' || result === 'blackjack') && this.bank + payout >= 1000) {
+			this.career.cameBackFromLow = true;
+		}
+
+		// All-in tracking
+		if (this.currentBet === this.bank + hand.bet) {
+			this.career.allInCount++;
+		}
+
+		// Min bet win tracking
+		if (hand.bet <= 10 && (result === 'win' || result === 'blackjack')) {
+			this.career.minBetWins++;
+		}
+
+		// Split tracking
+		if (this.playerHands.length > 1 && (result === 'win' || result === 'blackjack')) {
+			this.career.splitsWon++;
+		}
+		if (this.playerHands.length > this.career.maxSplitHands) {
+			this.career.maxSplitHands = this.playerHands.length;
+		}
+
 		for (let s = 0; s < SKIN_UNLOCK_WINS.length; s++) {
 			if (this.career.wins >= SKIN_UNLOCK_WINS[s] && !this.skinsUnlocked.has(s)) {
 				this.skinsUnlocked.add(s);
@@ -1473,6 +1668,9 @@ class BlackjackGame extends createSystem({
 
 		if (this.mode === 'survival' && result === 'lose') {
 			this.survivalLives--;
+			if (this.handsPlayed > this.career.survivalBest) {
+				this.career.survivalBest = this.handsPlayed;
+			}
 		}
 
 		if (this.mode === 'tournament') {
@@ -1576,6 +1774,9 @@ class BlackjackGame extends createSystem({
 
 		if (this.playerHands.length > 1) {
 			this.setText('actions', 'hand-value', `Hand ${this.activeHandIdx + 1}/${this.playerHands.length}: ${handStr(hand.cards)}`);
+			this.setText('actions', 'hand-indicator', `Playing Hand ${this.activeHandIdx + 1}`);
+		} else {
+			this.setText('actions', 'hand-indicator', '');
 		}
 	}
 
@@ -1628,7 +1829,7 @@ class BlackjackGame extends createSystem({
 			const idx = start + i;
 			const a = achvs[idx];
 			if (a) {
-				const icon = this.achievementsUnlocked.has(a.id) ? '✓' : '○';
+				const icon = this.achievementsUnlocked.has(a.id) ? '[X]' : '[ ]';
 				this.setText('achievements', `achv-${i + 1}`, `${icon} ${a.name}: ${a.desc}`);
 			} else {
 				this.setText('achievements', `achv-${i + 1}`, '---');
@@ -1657,7 +1858,7 @@ class BlackjackGame extends createSystem({
 		for (let i = 0; i < 8; i++) {
 			const unlocked = this.skinsUnlocked.has(i);
 			const active = i === this.skinIdx;
-			const prefix = active ? '* ' : unlocked ? '' : '🔒 ';
+			const prefix = active ? '* ' : unlocked ? '' : '[LOCKED] ';
 			this.setText('skins', `skin-${i}`, `${prefix}${SKIN_NAMES[i]}`);
 		}
 	}
@@ -1686,6 +1887,9 @@ class BlackjackGame extends createSystem({
 
 	private cycleTheme(delta: number) {
 		this.themeIdx = (this.themeIdx + delta + THEMES.length) % THEMES.length;
+		if (!this.career.themesUsed.includes(this.themeIdx)) {
+			this.career.themesUsed.push(this.themeIdx);
+		}
 		this.refreshSettings();
 	}
 
@@ -1695,6 +1899,9 @@ class BlackjackGame extends createSystem({
 			return;
 		}
 		this.skinIdx = idx;
+		if (!this.career.skinsSelected.includes(idx)) {
+			this.career.skinsSelected.push(idx);
+		}
 		this.audio.playClick();
 		this.saveAllData();
 		this.refreshSkins();
@@ -1762,49 +1969,49 @@ class BlackjackGame extends createSystem({
 			{ id: 'earnings_10k', name: 'Ten K Club', desc: 'Earn 10,000 total', check: () => c.totalEarnings >= 10000 },
 			{ id: 'earnings_50k', name: 'Fifty K Club', desc: 'Earn 50,000 total', check: () => c.totalEarnings >= 50000 },
 			{ id: 'earnings_100k', name: 'Hundred K Club', desc: 'Earn 100,000 total', check: () => c.totalEarnings >= 100000 },
-			{ id: 'all_modes', name: 'Jack of All Trades', desc: 'Play all 8 game modes', check: () => false },
+			{ id: 'all_modes', name: 'Jack of All Trades', desc: 'Play all 8 game modes', check: () => c.modesPlayed.length >= 8 },
 			{ id: 'skin_3', name: 'Fashionista', desc: 'Unlock 3 card skins', check: () => this.skinsUnlocked.size >= 3 },
 			{ id: 'skin_all', name: 'Collector', desc: 'Unlock all card skins', check: () => this.skinsUnlocked.size >= 8 },
 			{ id: 'bank_20k', name: 'Money Bags', desc: 'Have 20,000+ in bank', check: () => this.bank >= 20000 },
 			{ id: 'bank_50k', name: 'Fat Stacks', desc: 'Have 50,000+ in bank', check: () => this.bank >= 50000 },
 			{ id: 'bank_100k', name: 'Casino Mogul', desc: 'Have 100,000+ in bank', check: () => this.bank >= 100000 },
-			{ id: 'survival_10', name: 'Survivor', desc: 'Survive 10 hands in Survival', check: () => false },
-			{ id: 'survival_25', name: 'Endurance', desc: 'Survive 25 hands in Survival', check: () => false },
+			{ id: 'survival_10', name: 'Survivor', desc: 'Survive 10 hands in Survival', check: () => c.survivalBest >= 10 },
+			{ id: 'survival_25', name: 'Endurance', desc: 'Survive 25 hands in Survival', check: () => c.survivalBest >= 25 },
 			{ id: 'tournament_win', name: 'Champion', desc: 'Score 500+ in Tournament', check: () => this.tournamentScore >= 500 },
 			{ id: 'push_5', name: 'Stalemate', desc: 'Get 5 pushes', check: () => c.pushes >= 5 },
 			{ id: 'push_20', name: 'Diplomat', desc: 'Get 20 pushes', check: () => c.pushes >= 20 },
 			{ id: 'winrate_60', name: 'Skilled Player', desc: 'Maintain 60%+ win rate (100+ hands)', check: () => c.hands >= 100 && (c.wins / c.hands) >= 0.6 },
 			{ id: 'winrate_70', name: 'Card Counter', desc: 'Maintain 70%+ win rate (100+ hands)', check: () => c.hands >= 100 && (c.wins / c.hands) >= 0.7 },
-			{ id: 'speed_5', name: 'Speed Demon', desc: 'Play 5 Speed Round hands', check: () => false },
-			{ id: 'speed_20', name: 'Lightning Fast', desc: 'Play 20 Speed Round hands', check: () => false },
-			{ id: 'highstakes_win', name: 'Whale Watcher', desc: 'Win a High Stakes hand', check: () => false },
-			{ id: 'counting_10', name: 'Counter', desc: 'Play 10 Counting Trainer hands', check: () => false },
+			{ id: 'speed_5', name: 'Speed Demon', desc: 'Play 5 Speed Round hands', check: () => c.speedHands >= 5 },
+			{ id: 'speed_20', name: 'Lightning Fast', desc: 'Play 20 Speed Round hands', check: () => c.speedHands >= 20 },
+			{ id: 'highstakes_win', name: 'Whale Watcher', desc: 'Win a High Stakes hand', check: () => c.highstakesWins >= 1 },
+			{ id: 'counting_10', name: 'Counter', desc: 'Play 10 Counting Trainer hands', check: () => c.countingHands >= 10 },
 			{ id: 'daily_3', name: 'Daily Grinder', desc: 'Complete 3 daily challenges', check: () => c.dailyDone >= 3 },
 			{ id: 'daily_7', name: 'Weekly Warrior', desc: 'Complete 7 daily challenges', check: () => c.dailyDone >= 7 },
 			{ id: 'daily_30', name: 'Monthly Master', desc: 'Complete 30 daily challenges', check: () => c.dailyDone >= 30 },
-			{ id: 'no_bust_10', name: 'Careful Player', desc: 'Play 10 hands without busting', check: () => false },
-			{ id: 'bust_5', name: 'Risk Taker', desc: 'Bust 5 times', check: () => c.losses >= 5 },
-			{ id: 'bust_20', name: 'Daredevil', desc: 'Bust 20 times', check: () => c.losses >= 20 },
-			{ id: 'practice_10', name: 'Student', desc: 'Play 10 Practice hands', check: () => false },
-			{ id: 'practice_50', name: 'Studious', desc: 'Play 50 Practice hands', check: () => false },
-			{ id: 'comeback', name: 'Comeback Kid', desc: 'Win after being below 1000', check: () => false },
+			{ id: 'no_bust_10', name: 'Careful Player', desc: 'Play 10 hands without busting', check: () => c.bestNoBust >= 10 },
+			{ id: 'bust_5', name: 'Risk Taker', desc: 'Bust 5 times', check: () => c.bustCount >= 5 },
+			{ id: 'bust_20', name: 'Daredevil', desc: 'Bust 20 times', check: () => c.bustCount >= 20 },
+			{ id: 'practice_10', name: 'Student', desc: 'Play 10 Practice hands', check: () => c.practiceHands >= 10 },
+			{ id: 'practice_50', name: 'Studious', desc: 'Play 50 Practice hands', check: () => c.practiceHands >= 50 },
+			{ id: 'comeback', name: 'Comeback Kid', desc: 'Win after being below 1000', check: () => c.cameBackFromLow },
 			{ id: 'perfect_game', name: 'Perfect Game', desc: 'Win 10 hands without losing', check: () => c.bestStreak >= 10 },
 			{ id: 'night_owl', name: 'Night Owl', desc: 'Play at midnight', check: () => new Date().getHours() === 0 },
 			{ id: 'early_bird', name: 'Early Bird', desc: 'Play at 6 AM', check: () => new Date().getHours() === 6 },
 			{ id: 'marathon', name: 'Marathon', desc: 'Play 50 hands in one session', check: () => this.handsPlayed >= 50 },
 			{ id: 'sprint', name: 'Sprint', desc: 'Play 20 hands in one session', check: () => this.handsPlayed >= 20 },
-			{ id: 'all_skins', name: 'Fashionista Max', desc: 'Select every skin once', check: () => false },
-			{ id: 'bankrupt', name: 'Rock Bottom', desc: 'Go bankrupt', check: () => false },
+			{ id: 'all_skins', name: 'Fashionista Max', desc: 'Select every skin once', check: () => c.skinsSelected.length >= 8 },
+			{ id: 'bankrupt', name: 'Rock Bottom', desc: 'Go bankrupt', check: () => this.bank <= 0 },
 			{ id: 'thousand_wins', name: 'Legendary Gambler', desc: 'Win 1000 hands', check: () => c.wins >= 1000 },
 			{ id: 'five_k_hands', name: 'Dedication', desc: 'Play 5000 hands total', check: () => c.hands >= 5000 },
-			{ id: 'theme_all', name: 'Decorator', desc: 'Try all 5 themes', check: () => false },
-			{ id: 'insurance_win', name: 'Insured', desc: 'Win an insurance bet', check: () => false },
-			{ id: 'split_aces', name: 'Ace Splitter', desc: 'Split a pair of aces', check: () => false },
-			{ id: 'triple_split', name: 'Triple Threat', desc: 'Have 3 hands via splits', check: () => false },
-			{ id: 'quad_split', name: 'Four of a Kind', desc: 'Have 4 hands via splits', check: () => false },
-			{ id: 'max_bet', name: 'All In', desc: 'Bet your entire bank', check: () => false },
-			{ id: 'min_bet', name: 'Penny Pincher', desc: 'Win with minimum bet', check: () => false },
-			{ id: 'vr_player', name: 'Virtual Reality', desc: 'Play in VR mode', check: () => false },
+			{ id: 'theme_all', name: 'Decorator', desc: 'Try all 5 themes', check: () => c.themesUsed.length >= 5 },
+			{ id: 'insurance_win', name: 'Insured', desc: 'Win an insurance bet', check: () => c.insuranceWins >= 1 },
+			{ id: 'split_aces', name: 'Ace Splitter', desc: 'Split a pair of aces', check: () => c.splitAcesCount >= 1 },
+			{ id: 'triple_split', name: 'Triple Threat', desc: 'Have 3 hands via splits', check: () => c.maxSplitHands >= 3 },
+			{ id: 'quad_split', name: 'Four of a Kind', desc: 'Have 4 hands via splits', check: () => c.maxSplitHands >= 4 },
+			{ id: 'max_bet', name: 'All In', desc: 'Bet your entire bank', check: () => c.allInCount >= 1 },
+			{ id: 'min_bet', name: 'Penny Pincher', desc: 'Win with minimum bet', check: () => c.minBetWins >= 1 },
+			{ id: 'vr_player', name: 'Virtual Reality', desc: 'Play in VR mode', check: () => c.playedVR },
 		];
 	}
 
@@ -1814,7 +2021,7 @@ class BlackjackGame extends createSystem({
 			if (!this.achievementsUnlocked.has(a.id) && a.check()) {
 				this.achievementsUnlocked.add(a.id);
 				this.audio.playAchievement();
-				this.showToast(`🏆 ${a.name}!`);
+				this.showToast(`ACHIEVEMENT: ${a.name}!`);
 			}
 		}
 	}
